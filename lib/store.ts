@@ -55,6 +55,7 @@ interface AppState {
   groups: Group[];
   currentGroup: Group | null;
   currentChannel: string;
+  joinedGroupIds: string[];
   
   // Actions
   setCurrentUser: (user: Member) => void;
@@ -66,6 +67,9 @@ interface AppState {
   sellTokens: (groupId: string, amount: number) => void;
   createProposal: (groupId: string, proposal: Omit<Proposal, "id" | "status" | "votesFor" | "votesAgainst">) => void;
   vote: (groupId: string, proposalId: string, support: boolean) => void;
+  joinGroup: (groupId: string) => void;
+  leaveGroup: (groupId: string) => void;
+  isMember: (groupId: string) => boolean;
 }
 
 // Generate mock price history
@@ -171,6 +175,7 @@ export const useStore = create<AppState>((set, get) => ({
   groups: mockGroups,
   currentGroup: null,
   currentChannel: "general",
+  joinedGroupIds: ["1"], // Demo: user is already a member of Solarpunk Builders
 
   setCurrentUser: (user) => set({ currentUser: user }),
 
@@ -326,5 +331,26 @@ export const useStore = create<AppState>((set, get) => ({
             }
           : state.currentGroup,
     }));
+  },
+
+  joinGroup: (groupId) => {
+    const group = get().groups.find((g) => g.id === groupId);
+    if (!group || !group.isPublic) return; // Can only join public groups
+    
+    set((state) => ({
+      joinedGroupIds: state.joinedGroupIds.includes(groupId) 
+        ? state.joinedGroupIds 
+        : [...state.joinedGroupIds, groupId],
+    }));
+  },
+
+  leaveGroup: (groupId) => {
+    set((state) => ({
+      joinedGroupIds: state.joinedGroupIds.filter((id) => id !== groupId),
+    }));
+  },
+
+  isMember: (groupId) => {
+    return get().joinedGroupIds.includes(groupId);
   },
 }));

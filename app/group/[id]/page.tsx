@@ -26,18 +26,349 @@ import {
   Shield,
   Globe,
   Lock,
+  GitCommit,
+  Calendar,
+  Eye,
+  UserPlus,
+  ArrowLeft,
 } from "lucide-react";
 
 type Tab = "chat" | "token" | "treasury" | "governance";
 
-export default function GroupDashboard() {
-  const params = useParams();
+// GitHub-like progress view for non-members
+function PublicProgressView({ group, onJoin, isMember }: { 
+  group: NonNullable<ReturnType<typeof useStore>["currentGroup"]>;
+  onJoin: () => void;
+  isMember: boolean;
+}) {
+  const formatPrice = (price: number) => {
+    if (price < 0.01) return price.toFixed(6);
+    if (price < 1) return price.toFixed(4);
+    return price.toFixed(2);
+  };
+
+  // Mock activity data for the progress view
+  const activityFeed = [
+    ...group.proposals.map(p => ({
+      type: "proposal" as const,
+      title: p.title,
+      description: p.status === "active" ? "New proposal created" : `Proposal ${p.status}`,
+      time: p.endDate,
+      status: p.status,
+      icon: Vote,
+    })),
+    { type: "treasury" as const, title: "Treasury grew to $" + group.treasuryBalance.toLocaleString(), description: "From trading fees", time: new Date(Date.now() - 86400000 * 2), icon: Wallet },
+    { type: "milestone" as const, title: `${group.memberCount.toLocaleString()} members reached`, description: "Community growing", time: new Date(Date.now() - 86400000 * 5), icon: Users },
+  ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+
+  return (
+    <div className="min-h-screen relative">
+      {/* Background */}
+      <div className="fixed inset-0 bg-gradient-to-br from-midnight via-obsidian to-slate" />
+      <div className="fixed inset-0 noise" />
+
+      {/* Navigation */}
+      <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-6xl mx-auto">
+        <Link href="/explore" className="flex items-center gap-2 text-smoke hover:text-pearl transition-colors">
+          <ArrowLeft className="w-4 h-4" />
+          Back to Explore
+        </Link>
+        <Link href="/" className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-gold flex items-center justify-center">
+            <Coins className="w-4 h-4 text-midnight" />
+          </div>
+          <span className="font-display text-lg">CommunityCoin</span>
+        </Link>
+      </nav>
+
+      {/* Main Content */}
+      <main className="relative z-10 max-w-6xl mx-auto px-8 pb-20">
+        {/* Header Section */}
+        <div className="glass rounded-2xl p-8 mb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-3">
+                <h1 className="font-display text-3xl font-bold">{group.name}</h1>
+                {group.isPublic ? (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-mint/10 text-mint text-sm">
+                    <Globe className="w-3 h-3" />
+                    Public
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-sm">
+                    <Lock className="w-3 h-3" />
+                    Invite Only
+                  </span>
+                )}
+              </div>
+              <p className="text-smoke text-lg leading-relaxed mb-4">{group.description}</p>
+              <div className="flex items-center gap-6 text-sm text-smoke">
+                <span className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  {group.memberCount.toLocaleString()} members
+                </span>
+                <span className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  Created {new Date(group.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                </span>
+                <span className="flex items-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Viewing as guest
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              {group.isPublic ? (
+                <button
+                  onClick={onJoin}
+                  className="px-6 py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  Join Community
+                </button>
+              ) : (
+                <div className="px-6 py-3 bg-graphite/50 rounded-xl text-smoke text-center">
+                  <Lock className="w-5 h-5 mx-auto mb-1" />
+                  <span className="text-sm">Invite Only</span>
+                </div>
+              )}
+              <Link
+                href={`/group/${group.id}/charter`}
+                className="px-6 py-3 glass rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-graphite/50 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                View Charter
+              </Link>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-4 gap-4 pt-6 border-t border-graphite">
+            <div>
+              <div className="text-smoke text-sm mb-1">Token</div>
+              <div className="font-mono text-mint text-lg">${group.tokenSymbol}</div>
+            </div>
+            <div>
+              <div className="text-smoke text-sm mb-1">Price</div>
+              <div className="font-mono text-lg flex items-center gap-1">
+                ${formatPrice(group.tokenPrice)}
+                <ArrowUpRight className="w-4 h-4 text-mint" />
+              </div>
+            </div>
+            <div>
+              <div className="text-smoke text-sm mb-1">Market Cap</div>
+              <div className="font-mono text-lg">${Math.round(group.tokenSupply * group.tokenPrice).toLocaleString()}</div>
+            </div>
+            <div>
+              <div className="text-smoke text-sm mb-1">Treasury</div>
+              <div className="font-mono text-gold text-lg">${group.treasuryBalance.toLocaleString()}</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-6">
+          {/* Charter / README Section */}
+          <div className="col-span-2 space-y-6">
+            {/* Charter Preview */}
+            <div className="glass rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <FileText className="w-5 h-5 text-ember" />
+                <h2 className="font-display text-xl font-semibold">Charter</h2>
+              </div>
+              <div className="prose prose-invert max-w-none">
+                <p className="text-pearl/90 leading-relaxed">{group.charter}</p>
+              </div>
+            </div>
+
+            {/* Activity Feed / Progress */}
+            <div className="glass rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <GitCommit className="w-5 h-5 text-ember" />
+                <h2 className="font-display text-xl font-semibold">Recent Activity</h2>
+              </div>
+              <div className="space-y-4">
+                {activityFeed.map((activity, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-start gap-4 relative"
+                  >
+                    {/* Timeline line */}
+                    {i < activityFeed.length - 1 && (
+                      <div className="absolute left-5 top-10 w-0.5 h-full bg-graphite" />
+                    )}
+                    
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      activity.type === "proposal" 
+                        ? activity.status === "passed" ? "bg-mint/10" : activity.status === "active" ? "bg-ember/10" : "bg-graphite"
+                        : activity.type === "treasury" ? "bg-gold/10" : "bg-mint/10"
+                    }`}>
+                      <activity.icon className={`w-5 h-5 ${
+                        activity.type === "proposal"
+                          ? activity.status === "passed" ? "text-mint" : activity.status === "active" ? "text-ember" : "text-smoke"
+                          : activity.type === "treasury" ? "text-gold" : "text-mint"
+                      }`} />
+                    </div>
+                    <div className="flex-1 pb-6">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-medium">{activity.title}</h3>
+                        <span className="text-smoke text-sm">
+                          {new Date(activity.time).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                      <p className="text-smoke text-sm">{activity.description}</p>
+                      {activity.type === "proposal" && activity.status && (
+                        <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs ${
+                          activity.status === "passed" ? "bg-mint/10 text-mint" :
+                          activity.status === "active" ? "bg-ember/10 text-ember" :
+                          "bg-graphite text-smoke"
+                        }`}>
+                          {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Token Chart Mini */}
+            <div className="glass rounded-2xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-semibold">Token Performance</h3>
+                <span className="text-mint text-sm flex items-center gap-1">
+                  <ArrowUpRight className="w-3 h-3" />
+                  +12.4%
+                </span>
+              </div>
+              <div className="h-32">
+                <svg className="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="miniChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(255, 107, 53, 0.3)" />
+                      <stop offset="100%" stopColor="rgba(255, 107, 53, 0)" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d={`M 0 80 ${group.priceHistory.slice(-20).map((p, i) => {
+                      const x = (i / 19) * 200;
+                      const prices = group.priceHistory.slice(-20).map(h => h.price);
+                      const minPrice = Math.min(...prices);
+                      const maxPrice = Math.max(...prices);
+                      const range = maxPrice - minPrice || 1;
+                      const y = 80 - ((p.price - minPrice) / range) * 70 - 5;
+                      return `L ${x} ${y}`;
+                    }).join(" ")} L 200 80 Z`}
+                    fill="url(#miniChartGradient)"
+                  />
+                  <path
+                    d={`M ${group.priceHistory.slice(-20).map((p, i) => {
+                      const x = (i / 19) * 200;
+                      const prices = group.priceHistory.slice(-20).map(h => h.price);
+                      const minPrice = Math.min(...prices);
+                      const maxPrice = Math.max(...prices);
+                      const range = maxPrice - minPrice || 1;
+                      const y = 80 - ((p.price - minPrice) / range) * 70 - 5;
+                      return `${i === 0 ? "" : "L "}${x} ${y}`;
+                    }).join(" ")}`}
+                    fill="none"
+                    stroke="#ff6b35"
+                    strokeWidth="2"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Active Proposals */}
+            {group.proposals.filter(p => p.status === "active").length > 0 && (
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-display font-semibold mb-4">Active Proposals</h3>
+                <div className="space-y-3">
+                  {group.proposals.filter(p => p.status === "active").map((proposal) => {
+                    const totalVotes = proposal.votesFor + proposal.votesAgainst;
+                    const forPercent = totalVotes > 0 ? (proposal.votesFor / totalVotes) * 100 : 0;
+                    return (
+                      <div key={proposal.id} className="p-3 bg-graphite/30 rounded-xl">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="px-2 py-0.5 rounded bg-ember/10 text-ember text-xs uppercase">
+                            {proposal.category}
+                          </span>
+                        </div>
+                        <h4 className="font-medium text-sm mb-2">{proposal.title}</h4>
+                        <div className="h-1.5 bg-graphite rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-mint rounded-full"
+                            style={{ width: `${forPercent}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-smoke mt-1">
+                          <span>{proposal.votesFor.toLocaleString()} for</span>
+                          <span>{proposal.votesAgainst.toLocaleString()} against</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Top Contributors */}
+            {group.members.length > 0 && (
+              <div className="glass rounded-2xl p-6">
+                <h3 className="font-display font-semibold mb-4">Top Contributors</h3>
+                <div className="space-y-3">
+                  {group.members.slice(0, 5).map((member, i) => (
+                    <div key={member.id} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-graphite flex items-center justify-center">
+                        {member.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{member.name}</div>
+                        <div className="text-smoke text-xs">{member.tokensHeld.toLocaleString()} ${group.tokenSymbol}</div>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded ${
+                        member.role === "founder" ? "bg-gold/10 text-gold" :
+                        member.role === "elder" ? "bg-mint/10 text-mint" :
+                        "bg-graphite text-smoke"
+                      }`}>
+                        {member.role}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Join CTA for public groups */}
+            {group.isPublic && (
+              <div className="glass rounded-2xl p-6 text-center">
+                <h3 className="font-display font-semibold mb-2">Ready to participate?</h3>
+                <p className="text-smoke text-sm mb-4">Join to chat, vote, and contribute to the community.</p>
+                <button
+                  onClick={onJoin}
+                  className="w-full py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                >
+                  Join Community
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Member dashboard view (existing functionality)
+function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useStore>["currentGroup"]> }) {
   const { 
-    groups, 
-    currentGroup, 
     currentChannel, 
     currentUser,
-    setCurrentGroup, 
     setCurrentChannel, 
     addMessage,
     buyTokens,
@@ -50,27 +381,10 @@ export default function GroupDashboard() {
   const [tradeAmount, setTradeAmount] = useState("");
   const [tradeType, setTradeType] = useState<"buy" | "sell">("buy");
 
-  useEffect(() => {
-    if (params.id) {
-      setCurrentGroup(params.id as string);
-    }
-  }, [params.id, setCurrentGroup]);
-
-  if (!currentGroup) {
-    return (
-      <div className="min-h-screen bg-midnight flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-graphite animate-pulse mx-auto mb-4" />
-          <p className="text-smoke">Loading community...</p>
-        </div>
-      </div>
-    );
-  }
-
   const handleSendMessage = () => {
     if (!messageInput.trim() || !currentUser) return;
     
-    addMessage(currentGroup.id, {
+    addMessage(group.id, {
       userId: currentUser.id,
       userName: currentUser.name,
       content: messageInput,
@@ -84,9 +398,9 @@ export default function GroupDashboard() {
     if (isNaN(amount) || amount <= 0) return;
 
     if (tradeType === "buy") {
-      buyTokens(currentGroup.id, amount);
+      buyTokens(group.id, amount);
     } else {
-      sellTokens(currentGroup.id, amount);
+      sellTokens(group.id, amount);
     }
     setTradeAmount("");
   };
@@ -97,7 +411,7 @@ export default function GroupDashboard() {
     return price.toFixed(2);
   };
 
-  const channelMessages = currentGroup.messages.filter(m => m.channel === currentChannel);
+  const channelMessages = group.messages.filter(m => m.channel === currentChannel);
 
   return (
     <div className="min-h-screen bg-midnight flex">
@@ -114,14 +428,14 @@ export default function GroupDashboard() {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-display text-lg font-semibold truncate">{currentGroup.name}</h1>
+              <h1 className="font-display text-lg font-semibold truncate">{group.name}</h1>
               <div className="flex items-center gap-2 text-smoke text-sm">
-                {currentGroup.isPublic ? (
+                {group.isPublic ? (
                   <Globe className="w-3 h-3" />
                 ) : (
                   <Lock className="w-3 h-3" />
                 )}
-                <span>{currentGroup.memberCount.toLocaleString()} members</span>
+                <span>{group.memberCount.toLocaleString()} members</span>
               </div>
             </div>
             <button className="p-2 rounded-lg hover:bg-graphite transition-colors">
@@ -134,15 +448,15 @@ export default function GroupDashboard() {
         <div className="p-4 border-b border-graphite">
           <div className="flex items-center justify-between mb-2">
             <span className="text-smoke text-sm">Token</span>
-            <span className="font-mono text-mint text-sm">${currentGroup.tokenSymbol}</span>
+            <span className="font-mono text-mint text-sm">${group.tokenSymbol}</span>
           </div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-smoke text-sm">Price</span>
-            <span className="font-mono text-sm">${formatPrice(currentGroup.tokenPrice)}</span>
+            <span className="font-mono text-sm">${formatPrice(group.tokenPrice)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-smoke text-sm">Treasury</span>
-            <span className="font-mono text-gold text-sm">${currentGroup.treasuryBalance.toLocaleString()}</span>
+            <span className="font-mono text-gold text-sm">${group.treasuryBalance.toLocaleString()}</span>
           </div>
         </div>
 
@@ -155,7 +469,7 @@ export default function GroupDashboard() {
             </button>
           </div>
           <div className="space-y-1">
-            {currentGroup.channels.map((channel) => (
+            {group.channels.map((channel) => (
               <button
                 key={channel}
                 onClick={() => setCurrentChannel(channel)}
@@ -180,7 +494,7 @@ export default function GroupDashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-medium truncate">{currentUser?.name}</div>
-              <div className="text-smoke text-sm">{currentUser?.tokensHeld.toLocaleString()} ${currentGroup.tokenSymbol}</div>
+              <div className="text-smoke text-sm">{currentUser?.tokensHeld.toLocaleString()} ${group.tokenSymbol}</div>
             </div>
           </div>
         </div>
@@ -213,7 +527,7 @@ export default function GroupDashboard() {
           </div>
           
           <Link
-            href={`/group/${currentGroup.id}/charter`}
+            href={`/group/${group.id}/charter`}
             className="flex items-center gap-2 px-4 py-2 text-smoke hover:text-pearl transition-colors"
           >
             <FileText className="w-4 h-4" />
@@ -252,7 +566,7 @@ export default function GroupDashboard() {
                         className="flex items-start gap-3 group"
                       >
                         <div className="w-10 h-10 rounded-full bg-graphite flex items-center justify-center flex-shrink-0">
-                          {currentGroup.members.find(m => m.id === message.userId)?.avatar || "👤"}
+                          {group.members.find(m => m.id === message.userId)?.avatar || "👤"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -306,11 +620,11 @@ export default function GroupDashboard() {
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-2xl">${currentGroup.tokenSymbol}</span>
+                          <span className="font-mono text-2xl">${group.tokenSymbol}</span>
                           <span className="px-2 py-0.5 rounded bg-mint/10 text-mint text-xs">Live</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-3xl">${formatPrice(currentGroup.tokenPrice)}</span>
+                          <span className="font-mono text-3xl">${formatPrice(group.tokenPrice)}</span>
                           <span className="flex items-center gap-1 text-mint text-sm">
                             <ArrowUpRight className="w-4 h-4" />
                             +12.4%
@@ -342,10 +656,10 @@ export default function GroupDashboard() {
                         </defs>
                         {/* Area */}
                         <path
-                          d={`M 0 200 ${currentGroup.priceHistory.map((p, i) => {
-                            const x = (i / (currentGroup.priceHistory.length - 1)) * 400;
-                            const minPrice = Math.min(...currentGroup.priceHistory.map(h => h.price));
-                            const maxPrice = Math.max(...currentGroup.priceHistory.map(h => h.price));
+                          d={`M 0 200 ${group.priceHistory.map((p, i) => {
+                            const x = (i / (group.priceHistory.length - 1)) * 400;
+                            const minPrice = Math.min(...group.priceHistory.map(h => h.price));
+                            const maxPrice = Math.max(...group.priceHistory.map(h => h.price));
                             const y = 200 - ((p.price - minPrice) / (maxPrice - minPrice)) * 180 - 10;
                             return `L ${x} ${y}`;
                           }).join(" ")} L 400 200 Z`}
@@ -353,10 +667,10 @@ export default function GroupDashboard() {
                         />
                         {/* Line */}
                         <path
-                          d={`M ${currentGroup.priceHistory.map((p, i) => {
-                            const x = (i / (currentGroup.priceHistory.length - 1)) * 400;
-                            const minPrice = Math.min(...currentGroup.priceHistory.map(h => h.price));
-                            const maxPrice = Math.max(...currentGroup.priceHistory.map(h => h.price));
+                          d={`M ${group.priceHistory.map((p, i) => {
+                            const x = (i / (group.priceHistory.length - 1)) * 400;
+                            const minPrice = Math.min(...group.priceHistory.map(h => h.price));
+                            const maxPrice = Math.max(...group.priceHistory.map(h => h.price));
                             const y = 200 - ((p.price - minPrice) / (maxPrice - minPrice)) * 180 - 10;
                             return `${i === 0 ? "" : "L "}${x} ${y}`;
                           }).join(" ")}`}
@@ -401,7 +715,7 @@ export default function GroupDashboard() {
                             className="w-full px-4 py-3 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors font-mono text-xl"
                           />
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-smoke">
-                            ${currentGroup.tokenSymbol}
+                            ${group.tokenSymbol}
                           </span>
                         </div>
                       </div>
@@ -410,18 +724,18 @@ export default function GroupDashboard() {
                         <div className="p-4 bg-graphite/30 rounded-xl space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-smoke">Price per token</span>
-                            <span className="font-mono">${formatPrice(currentGroup.tokenPrice)}</span>
+                            <span className="font-mono">${formatPrice(group.tokenPrice)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-smoke">Total {tradeType === "buy" ? "cost" : "received"}</span>
                             <span className="font-mono">
-                              ${(parseFloat(tradeAmount || "0") * currentGroup.tokenPrice).toFixed(2)}
+                              ${(parseFloat(tradeAmount || "0") * group.tokenPrice).toFixed(2)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-smoke">Treasury fee (2%)</span>
                             <span className="font-mono text-gold">
-                              ${(parseFloat(tradeAmount || "0") * currentGroup.tokenPrice * 0.02).toFixed(2)}
+                              ${(parseFloat(tradeAmount || "0") * group.tokenPrice * 0.02).toFixed(2)}
                             </span>
                           </div>
                         </div>
@@ -436,7 +750,7 @@ export default function GroupDashboard() {
                             : "bg-ember hover:bg-ember/90"
                         }`}
                       >
-                        {tradeType === "buy" ? "Buy" : "Sell"} ${currentGroup.tokenSymbol}
+                        {tradeType === "buy" ? "Buy" : "Sell"} ${group.tokenSymbol}
                       </button>
                     </div>
 
@@ -444,10 +758,10 @@ export default function GroupDashboard() {
                       <h3 className="text-sm text-smoke mb-3">Your Holdings</h3>
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-lg">{currentUser?.tokensHeld.toLocaleString()}</span>
-                        <span className="text-smoke">${currentGroup.tokenSymbol}</span>
+                        <span className="text-smoke">${group.tokenSymbol}</span>
                       </div>
                       <div className="text-smoke text-sm mt-1">
-                        ≈ ${((currentUser?.tokensHeld || 0) * currentGroup.tokenPrice).toFixed(2)}
+                        ≈ ${((currentUser?.tokensHeld || 0) * group.tokenPrice).toFixed(2)}
                       </div>
                     </div>
                   </div>
@@ -455,9 +769,9 @@ export default function GroupDashboard() {
                   {/* Token Stats */}
                   <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                      { label: "Market Cap", value: `$${(currentGroup.tokenSupply * currentGroup.tokenPrice).toLocaleString()}` },
-                      { label: "Total Supply", value: currentGroup.tokenSupply.toLocaleString() },
-                      { label: "Holders", value: currentGroup.memberCount.toLocaleString() },
+                      { label: "Market Cap", value: `$${(group.tokenSupply * group.tokenPrice).toLocaleString()}` },
+                      { label: "Total Supply", value: group.tokenSupply.toLocaleString() },
+                      { label: "Holders", value: group.memberCount.toLocaleString() },
                       { label: "24h Volume", value: "$12,450" },
                     ].map((stat) => (
                       <div key={stat.label} className="glass rounded-xl p-4">
@@ -484,10 +798,10 @@ export default function GroupDashboard() {
                   <div className="glass rounded-2xl p-8 text-center">
                     <div className="text-smoke mb-2">Community Treasury</div>
                     <div className="font-mono text-5xl text-gold mb-4">
-                      ${currentGroup.treasuryBalance.toLocaleString()}
+                      ${group.treasuryBalance.toLocaleString()}
                     </div>
                     <div className="text-smoke">
-                      Funded by 2% fees on all ${currentGroup.tokenSymbol} trades
+                      Funded by 2% fees on all ${group.tokenSymbol} trades
                     </div>
                   </div>
 
@@ -582,7 +896,7 @@ export default function GroupDashboard() {
                         <div className="text-smoke mb-1">Your Voting Power</div>
                         <div className="font-mono text-2xl">{currentUser?.tokensHeld.toLocaleString()} votes</div>
                         <div className="text-smoke text-sm mt-1">
-                          Based on your ${currentGroup.tokenSymbol} holdings
+                          Based on your ${group.tokenSymbol} holdings
                         </div>
                       </div>
                       <button className="px-6 py-3 bg-ember rounded-xl font-medium flex items-center gap-2 hover:bg-ember/90 transition-colors">
@@ -596,7 +910,7 @@ export default function GroupDashboard() {
                   <div>
                     <h3 className="font-display text-xl font-semibold mb-4">Active Proposals</h3>
                     <div className="space-y-4">
-                      {currentGroup.proposals.filter(p => p.status === "active").map((proposal) => {
+                      {group.proposals.filter(p => p.status === "active").map((proposal) => {
                         const totalVotes = proposal.votesFor + proposal.votesAgainst;
                         const forPercent = totalVotes > 0 ? (proposal.votesFor / totalVotes) * 100 : 0;
                         const timeLeft = Math.max(0, Math.ceil((new Date(proposal.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
@@ -641,14 +955,14 @@ export default function GroupDashboard() {
                             {/* Vote Buttons */}
                             <div className="flex gap-3">
                               <button
-                                onClick={() => vote(currentGroup.id, proposal.id, true)}
+                                onClick={() => vote(group.id, proposal.id, true)}
                                 className="flex-1 py-3 bg-mint/10 text-mint rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-mint/20 transition-colors"
                               >
                                 <Check className="w-4 h-4" />
                                 Vote For
                               </button>
                               <button
-                                onClick={() => vote(currentGroup.id, proposal.id, false)}
+                                onClick={() => vote(group.id, proposal.id, false)}
                                 className="flex-1 py-3 bg-ember/10 text-ember rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-ember/20 transition-colors"
                               >
                                 <X className="w-4 h-4" />
@@ -669,7 +983,7 @@ export default function GroupDashboard() {
                   <div>
                     <h3 className="font-display text-xl font-semibold mb-4">Past Proposals</h3>
                     <div className="space-y-3">
-                      {currentGroup.proposals.filter(p => p.status !== "active").map((proposal) => (
+                      {group.proposals.filter(p => p.status !== "active").map((proposal) => (
                         <div key={proposal.id} className="glass rounded-xl p-4 flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -705,4 +1019,44 @@ export default function GroupDashboard() {
       </main>
     </div>
   );
+}
+
+// Main component that determines which view to show
+export default function GroupPage() {
+  const params = useParams();
+  const { 
+    currentGroup, 
+    setCurrentGroup,
+    joinGroup,
+    isMember,
+  } = useStore();
+
+  useEffect(() => {
+    if (params.id) {
+      setCurrentGroup(params.id as string);
+    }
+  }, [params.id, setCurrentGroup]);
+
+  if (!currentGroup) {
+    return (
+      <div className="min-h-screen bg-midnight flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-graphite animate-pulse mx-auto mb-4" />
+          <p className="text-smoke">Loading community...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const userIsMember = isMember(currentGroup.id);
+
+  const handleJoin = () => {
+    joinGroup(currentGroup.id);
+  };
+
+  if (userIsMember) {
+    return <MemberDashboard group={currentGroup} />;
+  }
+
+  return <PublicProgressView group={currentGroup} onJoin={handleJoin} isMember={userIsMember} />;
 }
