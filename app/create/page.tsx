@@ -80,18 +80,18 @@ export default function CreateGroupPage() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-midnight via-obsidian to-slate" />
+      <div className="fixed inset-0 bg-white" />
       <div className="fixed inset-0 noise" />
-      <div className="fixed top-1/3 -left-32 w-96 h-96 bg-ember/10 rounded-full blur-[128px]" />
-      <div className="fixed bottom-1/3 -right-32 w-96 h-96 bg-mint/10 rounded-full blur-[128px]" />
+      <div className="fixed top-1/3 -left-32 w-96 h-96 bg-ember/5 rounded-full blur-[128px]" />
+      <div className="fixed bottom-1/3 -right-32 w-96 h-96 bg-mint/5 rounded-full blur-[128px]" />
 
       {/* Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-            <Coins className="w-5 h-5 text-midnight" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+            <Coins className="w-5 h-5 text-white" />
           </div>
-          <span className="font-display text-2xl font-semibold">CommunityCoin</span>
+          <span className="font-display text-2xl font-semibold text-pearl">CommunityCoin</span>
         </Link>
         
         <Link href="/" className="text-smoke hover:text-pearl transition-colors flex items-center gap-2">
@@ -136,35 +136,35 @@ export default function CreateGroupPage() {
               <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mx-auto mb-6">
                 <Users className="w-8 h-8 text-ember" />
               </div>
-              <h1 className="font-display text-3xl font-bold mb-3">Name Your Community</h1>
+              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Name Your Community</h1>
               <p className="text-smoke">What movement are you building?</p>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Community Name</label>
+                <label className="block text-sm font-medium mb-2 text-pearl">Community Name</label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleNameChange(e.target.value)}
                   placeholder="e.g., Solarpunk Builders"
-                  className="w-full px-4 py-4 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors text-lg"
+                  className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors text-lg text-pearl placeholder:text-smoke/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Short Description</label>
+                <label className="block text-sm font-medium mb-2 text-pearl">Short Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="A one-liner about what your community does..."
                   rows={3}
-                  className="w-full px-4 py-4 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors resize-none"
+                  className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors resize-none text-pearl placeholder:text-smoke/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-4">Visibility</label>
+                <label className="block text-sm font-medium mb-4 text-pearl">Visibility</label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
@@ -172,11 +172,11 @@ export default function CreateGroupPage() {
                     className={`p-4 rounded-xl border-2 transition-all text-left ${
                       formData.isPublic
                         ? "border-ember bg-ember/10"
-                        : "border-graphite hover:border-smoke"
+                        : "border-graphite hover:border-smoke bg-white"
                     }`}
                   >
                     <Globe className={`w-6 h-6 mb-2 ${formData.isPublic ? "text-ember" : "text-smoke"}`} />
-                    <div className="font-medium">Public</div>
+                    <div className="font-medium text-pearl">Public</div>
                     <div className="text-smoke text-sm">Anyone can see and buy tokens</div>
                   </button>
                   <button
@@ -185,11 +185,11 @@ export default function CreateGroupPage() {
                     className={`p-4 rounded-xl border-2 transition-all text-left ${
                       !formData.isPublic
                         ? "border-ember bg-ember/10"
-                        : "border-graphite hover:border-smoke"
+                        : "border-graphite hover:border-smoke bg-white"
                     }`}
                   >
                     <Lock className={`w-6 h-6 mb-2 ${!formData.isPublic ? "text-ember" : "text-smoke"}`} />
-                    <div className="font-medium">Private</div>
+                    <div className="font-medium text-pearl">Private</div>
                     <div className="text-smoke text-sm">Invite-only, tokens don't grant votes</div>
                   </button>
                 </div>
@@ -209,13 +209,13 @@ export default function CreateGroupPage() {
               <div className="w-16 h-16 rounded-2xl bg-mint/10 flex items-center justify-center mx-auto mb-6">
                 <Coins className="w-8 h-8 text-mint" />
               </div>
-              <h1 className="font-display text-3xl font-bold mb-3">Configure Your Token</h1>
+              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Configure Your Token</h1>
               <p className="text-smoke">Your community token launches automatically</p>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Token Symbol</label>
+                <label className="block text-sm font-medium mb-2 text-pearl">Token Symbol</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-smoke">$</span>
                   <input
@@ -223,30 +223,30 @@ export default function CreateGroupPage() {
                     value={formData.tokenSymbol}
                     onChange={(e) => setFormData(prev => ({ ...prev, tokenSymbol: e.target.value.toUpperCase().slice(0, 5) }))}
                     placeholder="SYMBOL"
-                    className="w-full pl-8 pr-4 py-4 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors text-lg font-mono uppercase"
+                    className="w-full pl-8 pr-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors text-lg font-mono uppercase text-pearl placeholder:text-smoke/50"
                   />
                 </div>
                 <p className="text-smoke text-sm mt-2">2-5 characters, like a stock ticker</p>
               </div>
 
               <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-medium text-lg">Token Economics</h3>
+                <h3 className="font-medium text-lg text-pearl">Token Economics</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="p-4 bg-graphite/50 rounded-lg">
+                  <div className="p-4 bg-slate rounded-lg">
                     <div className="text-smoke mb-1">Starting Price</div>
-                    <div className="font-mono text-lg">$0.01</div>
+                    <div className="font-mono text-lg text-pearl">$0.01</div>
                   </div>
-                  <div className="p-4 bg-graphite/50 rounded-lg">
+                  <div className="p-4 bg-slate rounded-lg">
                     <div className="text-smoke mb-1">Initial Supply</div>
-                    <div className="font-mono text-lg">100,000</div>
+                    <div className="font-mono text-lg text-pearl">100,000</div>
                   </div>
-                  <div className="p-4 bg-graphite/50 rounded-lg">
+                  <div className="p-4 bg-slate rounded-lg">
                     <div className="text-smoke mb-1">Curve Type</div>
-                    <div className="font-mono text-lg">Bonding</div>
+                    <div className="font-mono text-lg text-pearl">Bonding</div>
                   </div>
-                  <div className="p-4 bg-graphite/50 rounded-lg">
+                  <div className="p-4 bg-slate rounded-lg">
                     <div className="text-smoke mb-1">Treasury Fee</div>
-                    <div className="font-mono text-lg">2%</div>
+                    <div className="font-mono text-lg text-pearl">2%</div>
                   </div>
                 </div>
                 <p className="text-smoke text-sm">
@@ -282,19 +282,19 @@ export default function CreateGroupPage() {
               <div className="w-16 h-16 rounded-2xl bg-gold/10 flex items-center justify-center mx-auto mb-6">
                 <FileText className="w-8 h-8 text-gold" />
               </div>
-              <h1 className="font-display text-3xl font-bold mb-3">Write Your Charter</h1>
+              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Write Your Charter</h1>
               <p className="text-smoke">What does your community believe and build?</p>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium mb-2">Community Charter</label>
+                <label className="block text-sm font-medium mb-2 text-pearl">Community Charter</label>
                 <textarea
                   value={formData.charter}
                   onChange={(e) => setFormData(prev => ({ ...prev, charter: e.target.value }))}
                   placeholder="We believe in... Our mission is to... We aim to achieve..."
                   rows={8}
-                  className="w-full px-4 py-4 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-gold transition-colors resize-none leading-relaxed"
+                  className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-gold transition-colors resize-none leading-relaxed text-pearl placeholder:text-smoke/50"
                 />
                 <div className="flex justify-between text-sm mt-2">
                   <span className="text-smoke">This will be public on your group's page</span>
@@ -305,7 +305,7 @@ export default function CreateGroupPage() {
               </div>
 
               <div className="glass rounded-xl p-6">
-                <h3 className="font-medium mb-3">Charter Tips</h3>
+                <h3 className="font-medium mb-3 text-pearl">Charter Tips</h3>
                 <ul className="space-y-2 text-smoke text-sm">
                   <li className="flex items-start gap-2">
                     <span className="text-ember">•</span>
@@ -340,7 +340,7 @@ export default function CreateGroupPage() {
               <div className="w-16 h-16 rounded-2xl bg-ember/10 flex items-center justify-center mx-auto mb-6">
                 <Sparkles className="w-8 h-8 text-ember" />
               </div>
-              <h1 className="font-display text-3xl font-bold mb-3">Ready to Launch</h1>
+              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Ready to Launch</h1>
               <p className="text-smoke">Review your community details</p>
             </div>
 
@@ -348,7 +348,7 @@ export default function CreateGroupPage() {
               <div className="glass rounded-xl p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h2 className="font-display text-2xl font-semibold">{formData.name}</h2>
+                    <h2 className="font-display text-2xl font-semibold text-pearl">{formData.name}</h2>
                     <p className="text-smoke">{formData.description}</p>
                   </div>
                   <div className="px-3 py-1 rounded-full bg-mint/10 text-mint text-sm font-mono">
@@ -369,7 +369,7 @@ export default function CreateGroupPage() {
                 </div>
 
                 <div className="border-t border-graphite pt-4">
-                  <h3 className="font-medium mb-2">Charter</h3>
+                  <h3 className="font-medium mb-2 text-pearl">Charter</h3>
                   <p className="text-smoke text-sm leading-relaxed">{formData.charter}</p>
                 </div>
               </div>
@@ -381,7 +381,7 @@ export default function CreateGroupPage() {
                 </div>
                 <div className="glass rounded-xl p-4 text-center">
                   <div className="text-smoke text-sm mb-1">Supply</div>
-                  <div className="font-mono text-lg">100K</div>
+                  <div className="font-mono text-lg text-pearl">100K</div>
                 </div>
                 <div className="glass rounded-xl p-4 text-center">
                   <div className="text-smoke text-sm mb-1">Treasury Fee</div>
@@ -393,7 +393,7 @@ export default function CreateGroupPage() {
                 onClick={handleSubmit}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold text-lg flex items-center justify-center gap-3"
+                className="w-full py-4 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white"
               >
                 <Sparkles className="w-5 h-5" />
                 Launch Community
@@ -412,7 +412,7 @@ export default function CreateGroupPage() {
             <button
               onClick={() => setStep(s => Math.max(1, s - 1))}
               disabled={step === 1}
-              className="px-6 py-3 rounded-xl font-medium flex items-center gap-2 disabled:opacity-30 hover:bg-graphite/50 transition-colors"
+              className="px-6 py-3 rounded-xl font-medium flex items-center gap-2 disabled:opacity-30 hover:bg-graphite transition-colors text-pearl"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -420,7 +420,7 @@ export default function CreateGroupPage() {
             <button
               onClick={() => setStep(s => Math.min(4, s + 1))}
               disabled={!canProceed()}
-              className="px-6 py-3 bg-ember rounded-xl font-medium flex items-center gap-2 disabled:opacity-30 hover:bg-ember/90 transition-colors"
+              className="px-6 py-3 bg-ember rounded-xl font-medium flex items-center gap-2 disabled:opacity-30 hover:bg-ember/90 transition-colors text-white"
             >
               Continue
               <ArrowRight className="w-4 h-4" />

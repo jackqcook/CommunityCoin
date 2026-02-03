@@ -31,9 +31,9 @@ export default function CharterPage() {
 
   if (!currentGroup) {
     return (
-      <div className="min-h-screen bg-midnight flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-graphite animate-pulse mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full bg-slate animate-pulse mx-auto mb-4" />
           <p className="text-smoke">Loading charter...</p>
         </div>
       </div>
@@ -49,20 +49,20 @@ export default function CharterPage() {
   return (
     <div className="min-h-screen relative">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-midnight via-obsidian to-slate" />
+      <div className="fixed inset-0 bg-white" />
       <div className="fixed inset-0 noise" />
       
       {/* Decorative elements */}
-      <div className="fixed top-1/4 -left-48 w-96 h-96 bg-ember/10 rounded-full blur-[128px]" />
-      <div className="fixed bottom-1/4 -right-48 w-96 h-96 bg-gold/10 rounded-full blur-[128px]" />
+      <div className="fixed top-1/4 -left-48 w-96 h-96 bg-ember/5 rounded-full blur-[128px]" />
+      <div className="fixed bottom-1/4 -right-48 w-96 h-96 bg-gold/5 rounded-full blur-[128px]" />
 
       {/* Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-            <Coins className="w-5 h-5 text-midnight" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+            <Coins className="w-5 h-5 text-white" />
           </div>
-          <span className="font-display text-2xl font-semibold">CommunityCoin</span>
+          <span className="font-display text-2xl font-semibold text-pearl">CommunityCoin</span>
         </Link>
 
         <Link
@@ -96,7 +96,7 @@ export default function CharterPage() {
             )}
           </div>
 
-          <h1 className="font-display text-5xl md:text-6xl font-bold mb-4">
+          <h1 className="font-display text-5xl md:text-6xl font-bold mb-4 text-pearl">
             {currentGroup.name}
           </h1>
           <p className="text-smoke text-xl max-w-2xl mx-auto">
@@ -113,22 +113,22 @@ export default function CharterPage() {
         >
           <div className="glass rounded-xl p-5 text-center">
             <Users className="w-6 h-6 text-ember mx-auto mb-2" />
-            <div className="font-mono text-2xl mb-1">{currentGroup.memberCount.toLocaleString()}</div>
+            <div className="font-mono text-2xl mb-1 text-pearl">{currentGroup.memberCount.toLocaleString()}</div>
             <div className="text-smoke text-sm">Members</div>
           </div>
           <div className="glass rounded-xl p-5 text-center">
             <TrendingUp className="w-6 h-6 text-mint mx-auto mb-2" />
-            <div className="font-mono text-2xl mb-1">${formatPrice(currentGroup.tokenPrice)}</div>
+            <div className="font-mono text-2xl mb-1 text-pearl">${formatPrice(currentGroup.tokenPrice)}</div>
             <div className="text-smoke text-sm">${currentGroup.tokenSymbol} Price</div>
           </div>
           <div className="glass rounded-xl p-5 text-center">
             <Coins className="w-6 h-6 text-gold mx-auto mb-2" />
-            <div className="font-mono text-2xl mb-1">${currentGroup.treasuryBalance.toLocaleString()}</div>
+            <div className="font-mono text-2xl mb-1 text-pearl">${currentGroup.treasuryBalance.toLocaleString()}</div>
             <div className="text-smoke text-sm">Treasury</div>
           </div>
           <div className="glass rounded-xl p-5 text-center">
             <Calendar className="w-6 h-6 text-smoke mx-auto mb-2" />
-            <div className="font-mono text-2xl mb-1">
+            <div className="font-mono text-2xl mb-1 text-pearl">
               {new Date(currentGroup.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
             </div>
             <div className="text-smoke text-sm">Founded</div>
@@ -143,17 +143,17 @@ export default function CharterPage() {
           className="mb-16"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-              <Shield className="w-6 h-6 text-midnight" />
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h2 className="font-display text-2xl font-semibold">Our Charter</h2>
+              <h2 className="font-display text-2xl font-semibold text-pearl">Our Charter</h2>
               <p className="text-smoke text-sm">What we believe and what we're building</p>
             </div>
           </div>
 
           <div className="glass rounded-2xl p-8">
-            <p className="text-lg leading-relaxed whitespace-pre-wrap">
+            <p className="text-lg leading-relaxed whitespace-pre-wrap text-smoke">
               {currentGroup.charter}
             </p>
           </div>
@@ -171,15 +171,15 @@ export default function CharterPage() {
               <Target className="w-6 h-6 text-mint" />
             </div>
             <div>
-              <h2 className="font-display text-2xl font-semibold">How to Participate</h2>
+              <h2 className="font-display text-2xl font-semibold text-pearl">How to Participate</h2>
               <p className="text-smoke text-sm">Get involved in the community</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="glass rounded-xl p-6">
-              <div className="text-3xl mb-3">1</div>
-              <h3 className="font-medium mb-2">Buy ${currentGroup.tokenSymbol}</h3>
+              <div className="text-3xl mb-3 text-ember">1</div>
+              <h3 className="font-medium mb-2 text-pearl">Buy ${currentGroup.tokenSymbol}</h3>
               <p className="text-smoke text-sm">
                 {currentGroup.isPublic
                   ? "Holding tokens grants voting power proportional to your stake."
@@ -187,15 +187,15 @@ export default function CharterPage() {
               </p>
             </div>
             <div className="glass rounded-xl p-6">
-              <div className="text-3xl mb-3">2</div>
-              <h3 className="font-medium mb-2">Join the Conversation</h3>
+              <div className="text-3xl mb-3 text-ember">2</div>
+              <h3 className="font-medium mb-2 text-pearl">Join the Conversation</h3>
               <p className="text-smoke text-sm">
                 Connect with members in encrypted group chat. Share ideas, collaborate, and build together.
               </p>
             </div>
             <div className="glass rounded-xl p-6">
-              <div className="text-3xl mb-3">3</div>
-              <h3 className="font-medium mb-2">Shape the Future</h3>
+              <div className="text-3xl mb-3 text-ember">3</div>
+              <h3 className="font-medium mb-2 text-pearl">Shape the Future</h3>
               <p className="text-smoke text-sm">
                 Create and vote on proposals. Help decide how the treasury is deployed.
               </p>
@@ -215,7 +215,7 @@ export default function CharterPage() {
               <Sparkles className="w-6 h-6 text-gold" />
             </div>
             <div>
-              <h2 className="font-display text-2xl font-semibold">${currentGroup.tokenSymbol} Token</h2>
+              <h2 className="font-display text-2xl font-semibold text-pearl">${currentGroup.tokenSymbol} Token</h2>
               <p className="text-smoke text-sm">Community token economics</p>
             </div>
           </div>
@@ -228,11 +228,11 @@ export default function CharterPage() {
               </div>
               <div>
                 <div className="text-smoke text-sm mb-1">Total Supply</div>
-                <div className="font-mono text-xl">{currentGroup.tokenSupply.toLocaleString()}</div>
+                <div className="font-mono text-xl text-pearl">{currentGroup.tokenSupply.toLocaleString()}</div>
               </div>
               <div>
                 <div className="text-smoke text-sm mb-1">Market Cap</div>
-                <div className="font-mono text-xl">
+                <div className="font-mono text-xl text-pearl">
                   ${Math.round(currentGroup.tokenSupply * currentGroup.tokenPrice).toLocaleString()}
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function CharterPage() {
             </div>
 
             <div className="mt-6 pt-6 border-t border-graphite">
-              <h4 className="font-medium mb-2">Bonding Curve</h4>
+              <h4 className="font-medium mb-2 text-pearl">Bonding Curve</h4>
               <p className="text-smoke text-sm leading-relaxed">
                 ${currentGroup.tokenSymbol} uses an automated bonding curve for instant liquidity. 
                 The price increases as more tokens are purchased and decreases as tokens are sold. 
@@ -262,7 +262,7 @@ export default function CharterPage() {
         >
           <Link
             href={`/group/${currentGroup.id}`}
-            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold text-lg hover:scale-105 transition-transform"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold text-lg hover:scale-105 transition-transform text-white"
           >
             Enter Community
             <ExternalLink className="w-5 h-5" />

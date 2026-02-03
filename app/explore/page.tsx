@@ -40,16 +40,16 @@ export default function ExplorePage() {
   return (
     <div className="min-h-screen relative">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-midnight via-obsidian to-slate" />
+      <div className="fixed inset-0 bg-white" />
       <div className="fixed inset-0 noise" />
 
       {/* Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-            <Coins className="w-5 h-5 text-midnight" />
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+            <Coins className="w-5 h-5 text-white" />
           </div>
-          <span className="font-display text-2xl font-semibold">CommunityCoin</span>
+          <span className="font-display text-2xl font-semibold text-pearl">CommunityCoin</span>
         </Link>
 
         <div className="flex items-center gap-6">
@@ -58,7 +58,7 @@ export default function ExplorePage() {
           </Link>
           <Link
             href="/create"
-            className="px-5 py-2.5 bg-gradient-to-r from-ember to-flame rounded-lg font-medium hover:opacity-90 transition-opacity"
+            className="px-5 py-2.5 bg-gradient-to-r from-ember to-flame rounded-lg font-medium hover:opacity-90 transition-opacity text-white"
           >
             Create Group
           </Link>
@@ -69,7 +69,7 @@ export default function ExplorePage() {
       <main className="relative z-10 max-w-7xl mx-auto px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="font-display text-4xl md:text-5xl font-bold mb-4 text-pearl">
             Explore Communities
           </h1>
           <p className="text-smoke text-lg max-w-2xl mx-auto">
@@ -86,7 +86,7 @@ export default function ExplorePage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search communities..."
-              className="w-full pl-12 pr-4 py-3 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors"
+              className="w-full pl-12 pr-4 py-3 bg-white border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors text-pearl placeholder:text-smoke/50"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ export default function ExplorePage() {
           ].map((stat) => (
             <div key={stat.label} className="glass rounded-xl p-4 text-center">
               <div className="text-smoke text-sm mb-1">{stat.label}</div>
-              <div className="font-mono text-xl">{stat.value}</div>
+              <div className="font-mono text-xl text-pearl">{stat.value}</div>
             </div>
           ))}
         </div>
@@ -132,11 +132,11 @@ export default function ExplorePage() {
               transition={{ delay: i * 0.05 }}
             >
               <Link href={`/group/${group.id}`}>
-                <div className="glass rounded-2xl p-6 hover:bg-graphite/30 transition-all cursor-pointer group h-full">
+                <div className="glass rounded-2xl p-6 hover:shadow-lg transition-all cursor-pointer group h-full">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-display text-xl font-semibold truncate">
+                        <h3 className="font-display text-xl font-semibold truncate text-pearl">
                           {group.name}
                         </h3>
                         {group.isPublic ? (
@@ -179,7 +179,7 @@ export default function ExplorePage() {
                       </div>
                       <div>
                         <div className="text-smoke mb-1">MCap</div>
-                        <div className="font-mono">
+                        <div className="font-mono text-pearl">
                           ${Math.round(group.tokenSupply * group.tokenPrice / 1000)}K
                         </div>
                       </div>
@@ -206,7 +206,7 @@ export default function ExplorePage() {
                           return `${i === 0 ? "" : "L "}${x} ${y}`;
                         }).join(" ")}`}
                         fill="none"
-                        stroke="#ff6b35"
+                        stroke="#dc143c"
                         strokeWidth="1.5"
                       />
                     </svg>
@@ -222,11 +222,11 @@ export default function ExplorePage() {
             <div className="w-16 h-16 rounded-full bg-graphite flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-smoke" />
             </div>
-            <h3 className="font-display text-xl mb-2">No communities found</h3>
+            <h3 className="font-display text-xl mb-2 text-pearl">No communities found</h3>
             <p className="text-smoke mb-6">Try adjusting your search or filters</p>
             <Link
               href="/create"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-ember rounded-xl font-medium hover:bg-ember/90 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-ember rounded-xl font-medium hover:bg-ember/90 transition-colors text-white"
             >
               Create Your Own
             </Link>

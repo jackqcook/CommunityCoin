@@ -64,7 +64,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
   return (
     <div className="min-h-screen relative">
       {/* Background */}
-      <div className="fixed inset-0 bg-gradient-to-br from-midnight via-obsidian to-slate" />
+      <div className="fixed inset-0 bg-white" />
       <div className="fixed inset-0 noise" />
 
       {/* Navigation */}
@@ -74,10 +74,10 @@ function PublicProgressView({ group, onJoin, isMember }: {
           Back to Explore
         </Link>
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-            <Coins className="w-4 h-4 text-midnight" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+            <Coins className="w-4 h-4 text-white" />
           </div>
-          <span className="font-display text-lg">CommunityCoin</span>
+          <span className="font-display text-lg text-pearl">CommunityCoin</span>
         </Link>
       </nav>
 
@@ -88,14 +88,14 @@ function PublicProgressView({ group, onJoin, isMember }: {
           <div className="flex items-start justify-between mb-6">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-3">
-                <h1 className="font-display text-3xl font-bold">{group.name}</h1>
+                <h1 className="font-display text-3xl font-bold text-pearl">{group.name}</h1>
                 {group.isPublic ? (
                   <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-mint/10 text-mint text-sm">
                     <Globe className="w-3 h-3" />
                     Public
                   </span>
                 ) : (
-                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-sm">
+                  <span className="flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/10 text-amber-600 text-sm">
                     <Lock className="w-3 h-3" />
                     Invite Only
                   </span>
@@ -121,20 +121,20 @@ function PublicProgressView({ group, onJoin, isMember }: {
               {group.isPublic ? (
                 <button
                   onClick={onJoin}
-                  className="px-6 py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity"
+                  className="px-6 py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold flex items-center gap-2 hover:opacity-90 transition-opacity text-white"
                 >
                   <UserPlus className="w-5 h-5" />
                   Join Community
                 </button>
               ) : (
-                <div className="px-6 py-3 bg-graphite/50 rounded-xl text-smoke text-center">
+                <div className="px-6 py-3 bg-slate rounded-xl text-smoke text-center">
                   <Lock className="w-5 h-5 mx-auto mb-1" />
                   <span className="text-sm">Invite Only</span>
                 </div>
               )}
               <Link
                 href={`/group/${group.id}/charter`}
-                className="px-6 py-3 glass rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-graphite/50 transition-colors"
+                className="px-6 py-3 glass rounded-xl font-medium flex items-center justify-center gap-2 hover:bg-slate transition-colors text-pearl"
               >
                 <FileText className="w-4 h-4" />
                 View Charter
@@ -150,14 +150,14 @@ function PublicProgressView({ group, onJoin, isMember }: {
             </div>
             <div>
               <div className="text-smoke text-sm mb-1">Price</div>
-              <div className="font-mono text-lg flex items-center gap-1">
+              <div className="font-mono text-lg flex items-center gap-1 text-pearl">
                 ${formatPrice(group.tokenPrice)}
                 <ArrowUpRight className="w-4 h-4 text-mint" />
               </div>
             </div>
             <div>
               <div className="text-smoke text-sm mb-1">Market Cap</div>
-              <div className="font-mono text-lg">${Math.round(group.tokenSupply * group.tokenPrice).toLocaleString()}</div>
+              <div className="font-mono text-lg text-pearl">${Math.round(group.tokenSupply * group.tokenPrice).toLocaleString()}</div>
             </div>
             <div>
               <div className="text-smoke text-sm mb-1">Treasury</div>
@@ -173,10 +173,10 @@ function PublicProgressView({ group, onJoin, isMember }: {
             <div className="glass rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-4">
                 <FileText className="w-5 h-5 text-ember" />
-                <h2 className="font-display text-xl font-semibold">Charter</h2>
+                <h2 className="font-display text-xl font-semibold text-pearl">Charter</h2>
               </div>
-              <div className="prose prose-invert max-w-none">
-                <p className="text-pearl/90 leading-relaxed">{group.charter}</p>
+              <div className="prose max-w-none">
+                <p className="text-smoke leading-relaxed">{group.charter}</p>
               </div>
             </div>
 
@@ -184,7 +184,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
             <div className="glass rounded-2xl p-6">
               <div className="flex items-center gap-2 mb-6">
                 <GitCommit className="w-5 h-5 text-ember" />
-                <h2 className="font-display text-xl font-semibold">Recent Activity</h2>
+                <h2 className="font-display text-xl font-semibold text-pearl">Recent Activity</h2>
               </div>
               <div className="space-y-4">
                 {activityFeed.map((activity, i) => (
@@ -202,7 +202,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
                     
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                       activity.type === "proposal" 
-                        ? activity.status === "passed" ? "bg-mint/10" : activity.status === "active" ? "bg-ember/10" : "bg-graphite"
+                        ? activity.status === "passed" ? "bg-mint/10" : activity.status === "active" ? "bg-ember/10" : "bg-slate"
                         : activity.type === "treasury" ? "bg-gold/10" : "bg-mint/10"
                     }`}>
                       <activity.icon className={`w-5 h-5 ${
@@ -213,7 +213,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
                     </div>
                     <div className="flex-1 pb-6">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-medium">{activity.title}</h3>
+                        <h3 className="font-medium text-pearl">{activity.title}</h3>
                         <span className="text-smoke text-sm">
                           {new Date(activity.time).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </span>
@@ -223,7 +223,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
                         <span className={`inline-block mt-2 px-2 py-0.5 rounded text-xs ${
                           activity.status === "passed" ? "bg-mint/10 text-mint" :
                           activity.status === "active" ? "bg-ember/10 text-ember" :
-                          "bg-graphite text-smoke"
+                          "bg-slate text-smoke"
                         }`}>
                           {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
                         </span>
@@ -240,7 +240,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
             {/* Token Chart Mini */}
             <div className="glass rounded-2xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display font-semibold">Token Performance</h3>
+                <h3 className="font-display font-semibold text-pearl">Token Performance</h3>
                 <span className="text-mint text-sm flex items-center gap-1">
                   <ArrowUpRight className="w-3 h-3" />
                   +12.4%
@@ -250,8 +250,8 @@ function PublicProgressView({ group, onJoin, isMember }: {
                 <svg className="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
                   <defs>
                     <linearGradient id="miniChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255, 107, 53, 0.3)" />
-                      <stop offset="100%" stopColor="rgba(255, 107, 53, 0)" />
+                      <stop offset="0%" stopColor="rgba(220, 20, 60, 0.2)" />
+                      <stop offset="100%" stopColor="rgba(220, 20, 60, 0)" />
                     </linearGradient>
                   </defs>
                   <path
@@ -277,7 +277,7 @@ function PublicProgressView({ group, onJoin, isMember }: {
                       return `${i === 0 ? "" : "L "}${x} ${y}`;
                     }).join(" ")}`}
                     fill="none"
-                    stroke="#ff6b35"
+                    stroke="#dc143c"
                     strokeWidth="2"
                   />
                 </svg>
@@ -287,19 +287,19 @@ function PublicProgressView({ group, onJoin, isMember }: {
             {/* Active Proposals */}
             {group.proposals.filter(p => p.status === "active").length > 0 && (
               <div className="glass rounded-2xl p-6">
-                <h3 className="font-display font-semibold mb-4">Active Proposals</h3>
+                <h3 className="font-display font-semibold mb-4 text-pearl">Active Proposals</h3>
                 <div className="space-y-3">
                   {group.proposals.filter(p => p.status === "active").map((proposal) => {
                     const totalVotes = proposal.votesFor + proposal.votesAgainst;
                     const forPercent = totalVotes > 0 ? (proposal.votesFor / totalVotes) * 100 : 0;
                     return (
-                      <div key={proposal.id} className="p-3 bg-graphite/30 rounded-xl">
+                      <div key={proposal.id} className="p-3 bg-slate rounded-xl">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="px-2 py-0.5 rounded bg-ember/10 text-ember text-xs uppercase">
                             {proposal.category}
                           </span>
                         </div>
-                        <h4 className="font-medium text-sm mb-2">{proposal.title}</h4>
+                        <h4 className="font-medium text-sm mb-2 text-pearl">{proposal.title}</h4>
                         <div className="h-1.5 bg-graphite rounded-full overflow-hidden">
                           <div
                             className="h-full bg-mint rounded-full"
@@ -320,21 +320,21 @@ function PublicProgressView({ group, onJoin, isMember }: {
             {/* Top Contributors */}
             {group.members.length > 0 && (
               <div className="glass rounded-2xl p-6">
-                <h3 className="font-display font-semibold mb-4">Top Contributors</h3>
+                <h3 className="font-display font-semibold mb-4 text-pearl">Top Contributors</h3>
                 <div className="space-y-3">
                   {group.members.slice(0, 5).map((member, i) => (
                     <div key={member.id} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-graphite flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-slate flex items-center justify-center">
                         {member.avatar}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm truncate">{member.name}</div>
+                        <div className="font-medium text-sm truncate text-pearl">{member.name}</div>
                         <div className="text-smoke text-xs">{member.tokensHeld.toLocaleString()} ${group.tokenSymbol}</div>
                       </div>
                       <span className={`text-xs px-2 py-0.5 rounded ${
                         member.role === "founder" ? "bg-gold/10 text-gold" :
                         member.role === "elder" ? "bg-mint/10 text-mint" :
-                        "bg-graphite text-smoke"
+                        "bg-slate text-smoke"
                       }`}>
                         {member.role}
                       </span>
@@ -347,11 +347,11 @@ function PublicProgressView({ group, onJoin, isMember }: {
             {/* Join CTA for public groups */}
             {group.isPublic && (
               <div className="glass rounded-2xl p-6 text-center">
-                <h3 className="font-display font-semibold mb-2">Ready to participate?</h3>
+                <h3 className="font-display font-semibold mb-2 text-pearl">Ready to participate?</h3>
                 <p className="text-smoke text-sm mb-4">Join to chat, vote, and contribute to the community.</p>
                 <button
                   onClick={onJoin}
-                  className="w-full py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold hover:opacity-90 transition-opacity"
+                  className="w-full py-3 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold hover:opacity-90 transition-opacity text-white"
                 >
                   Join Community
                 </button>
@@ -414,21 +414,21 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
   const channelMessages = group.messages.filter(m => m.channel === currentChannel);
 
   return (
-    <div className="min-h-screen bg-midnight flex">
+    <div className="min-h-screen bg-white flex">
       {/* Sidebar */}
-      <aside className="w-72 bg-obsidian border-r border-graphite flex flex-col">
+      <aside className="w-72 bg-slate border-r border-graphite flex flex-col">
         {/* Group Header */}
         <div className="p-4 border-b border-graphite">
           <Link href="/" className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-gold flex items-center justify-center">
-              <Coins className="w-4 h-4 text-midnight" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+              <Coins className="w-4 h-4 text-white" />
             </div>
-            <span className="font-display text-lg">CommunityCoin</span>
+            <span className="font-display text-lg text-pearl">CommunityCoin</span>
           </Link>
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-display text-lg font-semibold truncate">{group.name}</h1>
+              <h1 className="font-display text-lg font-semibold truncate text-pearl">{group.name}</h1>
               <div className="flex items-center gap-2 text-smoke text-sm">
                 {group.isPublic ? (
                   <Globe className="w-3 h-3" />
@@ -452,7 +452,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
           </div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-smoke text-sm">Price</span>
-            <span className="font-mono text-sm">${formatPrice(group.tokenPrice)}</span>
+            <span className="font-mono text-sm text-pearl">${formatPrice(group.tokenPrice)}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-smoke text-sm">Treasury</span>
@@ -475,8 +475,8 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                 onClick={() => setCurrentChannel(channel)}
                 className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
                   currentChannel === channel
-                    ? "bg-graphite text-pearl"
-                    : "text-smoke hover:bg-graphite/50 hover:text-pearl"
+                    ? "bg-white text-pearl shadow-sm"
+                    : "text-smoke hover:bg-white/50 hover:text-pearl"
                 }`}
               >
                 <Hash className="w-4 h-4" />
@@ -489,11 +489,11 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
         {/* User Profile */}
         <div className="p-4 border-t border-graphite">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-graphite flex items-center justify-center text-lg">
+            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg">
               {currentUser?.avatar}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{currentUser?.name}</div>
+              <div className="font-medium truncate text-pearl">{currentUser?.name}</div>
               <div className="text-smoke text-sm">{currentUser?.tokensHeld.toLocaleString()} ${group.tokenSymbol}</div>
             </div>
           </div>
@@ -501,9 +501,9 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col bg-white">
         {/* Tab Navigation */}
-        <header className="h-14 border-b border-graphite flex items-center justify-between px-6">
+        <header className="h-14 border-b border-graphite flex items-center justify-between px-6 bg-white">
           <div className="flex items-center gap-1">
             {[
               { id: "chat", icon: MessageSquare, label: "Chat" },
@@ -516,7 +516,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                 onClick={() => setActiveTab(tab.id as Tab)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? "bg-graphite text-pearl"
+                    ? "bg-slate text-pearl"
                     : "text-smoke hover:text-pearl"
                 }`}
               >
@@ -553,7 +553,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center">
                         <Hash className="w-12 h-12 text-graphite mx-auto mb-4" />
-                        <h3 className="font-display text-xl mb-2">Welcome to #{currentChannel}</h3>
+                        <h3 className="font-display text-xl mb-2 text-pearl">Welcome to #{currentChannel}</h3>
                         <p className="text-smoke">Start the conversation!</p>
                       </div>
                     </div>
@@ -565,17 +565,17 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                         animate={{ opacity: 1, y: 0 }}
                         className="flex items-start gap-3 group"
                       >
-                        <div className="w-10 h-10 rounded-full bg-graphite flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-slate flex items-center justify-center flex-shrink-0">
                           {group.members.find(m => m.id === message.userId)?.avatar || "👤"}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{message.userName}</span>
+                            <span className="font-medium text-pearl">{message.userName}</span>
                             <span className="text-smoke text-xs">
                               {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
-                          <p className="text-pearl/90 leading-relaxed">{message.content}</p>
+                          <p className="text-smoke leading-relaxed">{message.content}</p>
                         </div>
                       </motion.div>
                     ))
@@ -591,12 +591,12 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                       onChange={(e) => setMessageInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                       placeholder={`Message #${currentChannel}`}
-                      className="flex-1 px-4 py-3 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors"
+                      className="flex-1 px-4 py-3 bg-white border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors text-pearl placeholder:text-smoke/50"
                     />
                     <button
                       onClick={handleSendMessage}
                       disabled={!messageInput.trim()}
-                      className="p-3 bg-ember rounded-xl disabled:opacity-30 hover:bg-ember/90 transition-colors"
+                      className="p-3 bg-ember rounded-xl disabled:opacity-30 hover:bg-ember/90 transition-colors text-white"
                     >
                       <Send className="w-5 h-5" />
                     </button>
@@ -620,11 +620,11 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-mono text-2xl">${group.tokenSymbol}</span>
+                          <span className="font-mono text-2xl text-pearl">${group.tokenSymbol}</span>
                           <span className="px-2 py-0.5 rounded bg-mint/10 text-mint text-xs">Live</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className="font-mono text-3xl">${formatPrice(group.tokenPrice)}</span>
+                          <span className="font-mono text-3xl text-pearl">${formatPrice(group.tokenPrice)}</span>
                           <span className="flex items-center gap-1 text-mint text-sm">
                             <ArrowUpRight className="w-4 h-4" />
                             +12.4%
@@ -636,7 +636,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                           <button
                             key={period}
                             className={`px-3 py-1 rounded-lg text-sm ${
-                              period === "1M" ? "bg-graphite text-pearl" : "text-smoke hover:text-pearl"
+                              period === "1M" ? "bg-slate text-pearl" : "text-smoke hover:text-pearl"
                             }`}
                           >
                             {period}
@@ -650,8 +650,8 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                       <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
                         <defs>
                           <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="rgba(255, 107, 53, 0.3)" />
-                            <stop offset="100%" stopColor="rgba(255, 107, 53, 0)" />
+                            <stop offset="0%" stopColor="rgba(220, 20, 60, 0.2)" />
+                            <stop offset="100%" stopColor="rgba(220, 20, 60, 0)" />
                           </linearGradient>
                         </defs>
                         {/* Area */}
@@ -675,7 +675,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                             return `${i === 0 ? "" : "L "}${x} ${y}`;
                           }).join(" ")}`}
                           fill="none"
-                          stroke="#ff6b35"
+                          stroke="#dc143c"
                           strokeWidth="2"
                         />
                       </svg>
@@ -684,11 +684,11 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
 
                   {/* Trade Panel */}
                   <div className="glass rounded-2xl p-6">
-                    <div className="flex rounded-xl bg-graphite/50 p-1 mb-6">
+                    <div className="flex rounded-xl bg-slate p-1 mb-6">
                       <button
                         onClick={() => setTradeType("buy")}
                         className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
-                          tradeType === "buy" ? "bg-mint text-midnight" : "text-smoke"
+                          tradeType === "buy" ? "bg-mint text-white" : "text-smoke"
                         }`}
                       >
                         Buy
@@ -712,7 +712,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                             value={tradeAmount}
                             onChange={(e) => setTradeAmount(e.target.value)}
                             placeholder="0"
-                            className="w-full px-4 py-3 bg-graphite/50 border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors font-mono text-xl"
+                            className="w-full px-4 py-3 bg-white border border-graphite rounded-xl focus:outline-none focus:border-ember transition-colors font-mono text-xl text-pearl placeholder:text-smoke/50"
                           />
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-smoke">
                             ${group.tokenSymbol}
@@ -721,14 +721,14 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                       </div>
 
                       {tradeAmount && (
-                        <div className="p-4 bg-graphite/30 rounded-xl space-y-2 text-sm">
+                        <div className="p-4 bg-slate rounded-xl space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-smoke">Price per token</span>
-                            <span className="font-mono">${formatPrice(group.tokenPrice)}</span>
+                            <span className="font-mono text-pearl">${formatPrice(group.tokenPrice)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-smoke">Total {tradeType === "buy" ? "cost" : "received"}</span>
-                            <span className="font-mono">
+                            <span className="font-mono text-pearl">
                               ${(parseFloat(tradeAmount || "0") * group.tokenPrice).toFixed(2)}
                             </span>
                           </div>
@@ -746,8 +746,8 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                         disabled={!tradeAmount || parseFloat(tradeAmount) <= 0}
                         className={`w-full py-4 rounded-xl font-semibold disabled:opacity-30 transition-colors ${
                           tradeType === "buy"
-                            ? "bg-mint text-midnight hover:bg-mint/90"
-                            : "bg-ember hover:bg-ember/90"
+                            ? "bg-mint text-white hover:bg-mint/90"
+                            : "bg-ember text-white hover:bg-ember/90"
                         }`}
                       >
                         {tradeType === "buy" ? "Buy" : "Sell"} ${group.tokenSymbol}
@@ -757,7 +757,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                     <div className="mt-6 pt-6 border-t border-graphite">
                       <h3 className="text-sm text-smoke mb-3">Your Holdings</h3>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-lg">{currentUser?.tokensHeld.toLocaleString()}</span>
+                        <span className="font-mono text-lg text-pearl">{currentUser?.tokensHeld.toLocaleString()}</span>
                         <span className="text-smoke">${group.tokenSymbol}</span>
                       </div>
                       <div className="text-smoke text-sm mt-1">
@@ -776,7 +776,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                     ].map((stat) => (
                       <div key={stat.label} className="glass rounded-xl p-4">
                         <div className="text-smoke text-sm mb-1">{stat.label}</div>
-                        <div className="font-mono text-lg">{stat.value}</div>
+                        <div className="font-mono text-lg text-pearl">{stat.value}</div>
                       </div>
                     ))}
                   </div>
@@ -814,7 +814,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                         </div>
                         <div>
                           <div className="text-smoke text-sm">This Month</div>
-                          <div className="font-mono text-lg">+$4,250</div>
+                          <div className="font-mono text-lg text-pearl">+$4,250</div>
                         </div>
                       </div>
                     </div>
@@ -825,7 +825,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                         </div>
                         <div>
                           <div className="text-smoke text-sm">Allocated</div>
-                          <div className="font-mono text-lg">$45,000</div>
+                          <div className="font-mono text-lg text-pearl">$45,000</div>
                         </div>
                       </div>
                     </div>
@@ -836,7 +836,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                         </div>
                         <div>
                           <div className="text-smoke text-sm">Pending Proposals</div>
-                          <div className="font-mono text-lg">2</div>
+                          <div className="font-mono text-lg text-pearl">2</div>
                         </div>
                       </div>
                     </div>
@@ -844,7 +844,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
 
                   {/* Recent Activity */}
                   <div className="glass rounded-2xl p-6">
-                    <h3 className="font-display text-xl font-semibold mb-4">Recent Activity</h3>
+                    <h3 className="font-display text-xl font-semibold mb-4 text-pearl">Recent Activity</h3>
                     <div className="space-y-4">
                       {[
                         { type: "in", amount: 250, description: "Trade fees", time: "2 hours ago" },
@@ -864,7 +864,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                               )}
                             </div>
                             <div>
-                              <div className="font-medium">{activity.description}</div>
+                              <div className="font-medium text-pearl">{activity.description}</div>
                               <div className="text-smoke text-sm">{activity.time}</div>
                             </div>
                           </div>
@@ -894,12 +894,12 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-smoke mb-1">Your Voting Power</div>
-                        <div className="font-mono text-2xl">{currentUser?.tokensHeld.toLocaleString()} votes</div>
+                        <div className="font-mono text-2xl text-pearl">{currentUser?.tokensHeld.toLocaleString()} votes</div>
                         <div className="text-smoke text-sm mt-1">
                           Based on your ${group.tokenSymbol} holdings
                         </div>
                       </div>
-                      <button className="px-6 py-3 bg-ember rounded-xl font-medium flex items-center gap-2 hover:bg-ember/90 transition-colors">
+                      <button className="px-6 py-3 bg-ember rounded-xl font-medium flex items-center gap-2 hover:bg-ember/90 transition-colors text-white">
                         <Plus className="w-4 h-4" />
                         New Proposal
                       </button>
@@ -908,7 +908,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
 
                   {/* Active Proposals */}
                   <div>
-                    <h3 className="font-display text-xl font-semibold mb-4">Active Proposals</h3>
+                    <h3 className="font-display text-xl font-semibold mb-4 text-pearl">Active Proposals</h3>
                     <div className="space-y-4">
                       {group.proposals.filter(p => p.status === "active").map((proposal) => {
                         const totalVotes = proposal.votesFor + proposal.votesAgainst;
@@ -927,7 +927,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                                     Active
                                   </span>
                                 </div>
-                                <h4 className="font-display text-lg font-semibold">{proposal.title}</h4>
+                                <h4 className="font-display text-lg font-semibold text-pearl">{proposal.title}</h4>
                                 <p className="text-smoke text-sm mt-1">{proposal.description}</p>
                               </div>
                               <div className="text-right">
@@ -944,7 +944,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                                 <span className="text-mint">For: {proposal.votesFor.toLocaleString()}</span>
                                 <span className="text-ember">Against: {proposal.votesAgainst.toLocaleString()}</span>
                               </div>
-                              <div className="h-2 bg-graphite rounded-full overflow-hidden">
+                              <div className="h-2 bg-slate rounded-full overflow-hidden">
                                 <div
                                   className="h-full bg-mint rounded-full transition-all"
                                   style={{ width: `${forPercent}%` }}
@@ -981,7 +981,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
 
                   {/* Past Proposals */}
                   <div>
-                    <h3 className="font-display text-xl font-semibold mb-4">Past Proposals</h3>
+                    <h3 className="font-display text-xl font-semibold mb-4 text-pearl">Past Proposals</h3>
                     <div className="space-y-3">
                       {group.proposals.filter(p => p.status !== "active").map((proposal) => (
                         <div key={proposal.id} className="glass rounded-xl p-4 flex items-center justify-between">
@@ -996,7 +996,7 @@ function MemberDashboard({ group }: { group: NonNullable<ReturnType<typeof useSt
                               )}
                             </div>
                             <div>
-                              <div className="font-medium">{proposal.title}</div>
+                              <div className="font-medium text-pearl">{proposal.title}</div>
                               <div className="text-smoke text-sm">{proposal.category}</div>
                             </div>
                           </div>
@@ -1039,9 +1039,9 @@ export default function GroupPage() {
 
   if (!currentGroup) {
     return (
-      <div className="min-h-screen bg-midnight flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-graphite animate-pulse mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full bg-slate animate-pulse mx-auto mb-4" />
           <p className="text-smoke">Loading community...</p>
         </div>
       </div>

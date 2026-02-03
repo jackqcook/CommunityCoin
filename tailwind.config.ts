@@ -9,16 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        midnight: "#0a0a0f",
-        obsidian: "#12121a",
-        slate: "#1a1a24",
-        graphite: "#252532",
-        smoke: "#8888a0",
-        pearl: "#e8e8f0",
-        ember: "#ff6b35",
-        flame: "#ff8c42",
-        gold: "#ffd700",
-        mint: "#00d4aa",
+        midnight: "#1a1a2e",
+        obsidian: "#f8f9fa",
+        slate: "#f1f3f5",
+        graphite: "#e9ecef",
+        smoke: "#6b7280",
+        pearl: "#1f2937",
+        ember: "#dc143c",
+        flame: "#e63946",
+        gold: "#b8860b",
+        mint: "#059669",
       },
       fontFamily: {
         display: ["var(--font-display)", "serif"],
@@ -36,8 +36,8 @@ const config: Config = {
           "50%": { transform: "translateY(-20px)" },
         },
         glow: {
-          "0%": { boxShadow: "0 0 20px rgba(255, 107, 53, 0.3)" },
-          "100%": { boxShadow: "0 0 40px rgba(255, 107, 53, 0.6)" },
+          "0%": { boxShadow: "0 0 20px rgba(220, 20, 60, 0.3)" },
+          "100%": { boxShadow: "0 0 40px rgba(220, 20, 60, 0.5)" },
         },
       },
     },
