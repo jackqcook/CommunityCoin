@@ -19,7 +19,7 @@ import {
 
 export default function CreateGroupPage() {
   const router = useRouter();
-  const { createGroup } = useStore();
+  const { createGroup, buyTokens, joinGroup } = useStore();
   
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -30,6 +30,7 @@ export default function CreateGroupPage() {
     tokenSymbol: "",
     channels: ["general", "announcements"],
   });
+  const [initialBuyAmount, setInitialBuyAmount] = useState("");
 
   const generateSymbol = (name: string) => {
     const words = name.trim().toUpperCase().split(" ");
@@ -47,7 +48,7 @@ export default function CreateGroupPage() {
     }));
   };
 
-  const handleSubmit = () => {
+  const launch = (opts: { buy: boolean }) => {
     const newGroup = createGroup({
       name: formData.name,
       description: formData.description,
@@ -57,9 +58,17 @@ export default function CreateGroupPage() {
       tokenPrice: 0.01,
       tokenSupply: 100000,
       treasuryBalance: 0,
-      memberCount: 1,
+      memberCount: 0,
       channels: formData.channels,
     });
+
+    const buyAmount = parseFloat(initialBuyAmount);
+    if (opts.buy && !isNaN(buyAmount) && buyAmount > 0) {
+      buyTokens(newGroup.id, buyAmount);
+    }
+
+    // After launch, take creator directly into the member experience (chat)
+    joinGroup(newGroup.id);
     
     router.push(`/group/${newGroup.id}`);
   };
@@ -389,15 +398,71 @@ export default function CreateGroupPage() {
                 </div>
               </div>
 
-              <motion.button
-                onClick={handleSubmit}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-4 bg-gradient-to-r from-ember to-flame rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white"
-              >
-                <Sparkles className="w-5 h-5" />
-                Launch Community
-              </motion.button>
+              {/* Optional: Buy tokens at launch (without joining) */}
+              <div className="glass rounded-xl p-6">
+                <h3 className="font-medium text-pearl mb-2">Buy at launch (optional)</h3>
+                <p className="text-smoke text-sm mb-4">
+                  Buy some ${formData.tokenSymbol || "tokens"} right as you launch.
+                </p>
+
+                <div className="space-y-3">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={initialBuyAmount}
+                      onChange={(e) => setInitialBuyAmount(e.target.value)}
+                      placeholder="0"
+                      className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors font-mono text-lg text-pearl placeholder:text-smoke/50"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-smoke font-mono">
+                      ${formData.tokenSymbol || "TOKEN"}
+                    </span>
+                  </div>
+
+                  {initialBuyAmount && !isNaN(parseFloat(initialBuyAmount)) && parseFloat(initialBuyAmount) > 0 && (
+                    <div className="p-4 bg-slate rounded-xl space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-smoke">Price per token</span>
+                        <span className="font-mono text-pearl">$0.01</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-smoke">Total cost</span>
+                        <span className="font-mono text-pearl">
+                          ${(parseFloat(initialBuyAmount) * 0.01).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-smoke">Treasury fee (2%)</span>
+                        <span className="font-mono text-gold">
+                          ${(parseFloat(initialBuyAmount) * 0.01 * 0.02).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <motion.button
+                  onClick={() => launch({ buy: true })}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isNaN(parseFloat(initialBuyAmount)) || parseFloat(initialBuyAmount) <= 0}
+                  className="w-full py-4 bg-mint rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white disabled:opacity-30"
+                >
+                  Buy
+                </motion.button>
+                <motion.button
+                  onClick={() => launch({ buy: false })}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-4 glass rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-pearl hover:bg-graphite transition-colors"
+                >
+                  Skip
+                </motion.button>
+              </div>
 
               <p className="text-center text-smoke text-sm">
                 Your token will deploy instantly and your group chat will be ready
