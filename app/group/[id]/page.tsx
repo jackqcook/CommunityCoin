@@ -171,9 +171,9 @@ function PublicProgressView({ group, onJoin, isMember }: {
 
       {/* Navigation */}
       <nav className="relative z-10 flex items-center justify-between px-8 py-6 max-w-6xl mx-auto">
-        <Link href="/explore" className="flex items-center gap-2 text-smoke hover:text-pearl transition-colors">
+        <Link href="/" className="flex items-center gap-2 text-smoke hover:text-pearl transition-colors">
           <ArrowLeft className="w-4 h-4" />
-          Back to Explore
+          Back to Home
         </Link>
         <Link href="/" className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-ember to-flame flex items-center justify-center">
