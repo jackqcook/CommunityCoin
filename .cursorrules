@@ -1,0 +1,345 @@
+# CommunityCoin Cursor Rules
+
+You are building CommunityCoin, a decentralized platform for online communities to mobilize through encrypted communication, tokenized membership, and collective governance.
+
+## Core Architecture Principles
+
+### Source of Truth Hierarchy
+
+ALWAYS remember where data lives canonically:
+
+1. **BLOCKCHAIN (Immutable, Trustless)** - Source of truth for:
+   - Token balances & transfers
+   - Governance votes & proposals
+   - Treasury transactions
+   - Group creation events
+
+2. **XMTP Network (E2E Encrypted)** - Source of truth for:
+   - Group messages
+   - Direct messages
+   - Encrypted file references
+
+3. **IPFS (Content-Addressed)** - Source of truth for:
+   - Group charters
+   - Proposal descriptions
+   - Library assets
+   - User avatars / group images
+
+4. **Supabase (Derived/Cached)** - ONLY for:
+   - Indexed group metadata (for fast queries)
+   - Cached token prices & supplies
+   - Search indices
+   - Activity feeds
+   - User preferences
+
+**RULE: Never store in Supabase what should be on-chain or IPFS. Supabase must be rebuildable from blockchain + IPFS.**
+
+### Data Flow Pattern
+
+When reading data:
+```
+UI Component → TanStack Query → Supabase (cached) → Display
+                                    ↓
+                              If stale → Blockchain/IPFS (source)
+```
+
+When writing data:
+```
+UI Action → Blockchain Transaction → Event Emitted → Indexer → Supabase (cache)
+                                                          ↓
+                                                   UI updates via subscription
+```
+
+## Technology Stack
+
+### Frontend (Already in place)
+- **Next.js 14+** with App Router
+- **Tailwind CSS** for styling
+- **Zustand** for client state
+- **Privy** for authentication (wallet + email)
+- **Framer Motion** for animations
+- **TanStack Query** for data fetching (add when connecting to Supabase)
+
+### Backend Services
+- **Supabase** - Postgres database, realtime subscriptions, edge functions
+- **IPFS via Pinata** - Decentralized file storage
+- **Upstash Redis** - Caching (add at scale)
+
+### Web3
+- **Polygon L2** - Primary blockchain (chain ID: 80001 testnet, 137 mainnet)
+- **XMTP** - E2E encrypted messaging
+- **Snapshot** - Gasless governance voting
+- **Foundry** - Smart contract development
+
+## Code Organization
+
+```
+/app                    # Next.js App Router pages
+  /group/[id]/         # Group-specific pages
+  /create/             # Group creation flow
+  /explore/            # Discovery
+  
+/components            # Reusable UI components
+  /ui/                 # Base components (buttons, inputs, cards)
+  /group/              # Group-specific components
+  /governance/         # Voting, proposals
+  /chat/               # XMTP messaging components
+  
+/lib                   # Core utilities
+  /store.ts            # Zustand store
+  /supabase.ts         # Supabase client
+  /xmtp.ts             # XMTP client
+  /contracts.ts        # Contract ABIs and addresses
+  /hooks/              # Custom React hooks
+  
+/contracts             # Solidity contracts (Foundry)
+  /src/                # Contract source
+  /test/               # Contract tests
+  /script/             # Deployment scripts
+```
+
+## Database Schema (Supabase)
+
+When working with Supabase, follow this schema:
+
+### Core Tables
+- `groups` - Indexed from on-chain + IPFS
+- `members` - Token holders (cached from contract)
+- `proposals` - Indexed from Snapshot + on-chain
+- `activity` - Derived from on-chain events
+
+### User Tables
+- `profiles` - Optional user metadata
+- `user_group_memberships` - UI state (not on-chain membership)
+
+### Content Tables
+- `library_collections` - Cached from IPFS
+- `library_assets` - Cached from IPFS
+
+**RULE: Always include these fields for on-chain data:**
+- `contract_address` or `tx_hash` - Link back to blockchain
+- `last_indexed_block` / `last_indexed_at` - Track freshness
+- `*_cid` fields for IPFS content
+
+## Naming Conventions
+
+### Files
+- Components: PascalCase (`GroupCard.tsx`)
+- Utilities: camelCase (`formatTokenAmount.ts`)
+- Hooks: camelCase with `use` prefix (`useGroupMembers.ts`)
+- Pages: lowercase (`page.tsx`, `layout.tsx`)
+
+### Database
+- Tables: snake_case plural (`library_assets`)
+- Columns: snake_case (`created_at`, `wallet_address`)
+- Foreign keys: `{table}_id` (`group_id`)
+
+### Blockchain
+- Contract names: PascalCase (`CommunityToken`)
+- Events: PascalCase (`TokensPurchased`)
+- Functions: camelCase (`calculatePurchaseReturn`)
+
+### TypeScript
+- Interfaces: PascalCase (`interface GroupData`)
+- Types: PascalCase (`type ProposalStatus`)
+- Enums: PascalCase with PascalCase values
+
+## Component Patterns
+
+### Data Fetching
+Use TanStack Query for all server data:
+
+```typescript
+// Good
+const { data: group } = useQuery({
+  queryKey: ['group', groupId],
+  queryFn: () => supabase.from('groups').select().eq('id', groupId).single(),
+});
+
+// Bad - direct fetch in component
+const [group, setGroup] = useState(null);
+useEffect(() => {
+  fetch(`/api/groups/${groupId}`).then(...)
+}, []);
+```
+
+### Wallet Interactions
+Always use Privy hooks for wallet state:
+
+```typescript
+const { authenticated, user } = usePrivy();
+const { wallets } = useWallets();
+const address = wallets[0]?.address;
+```
+
+### On-Chain Writes
+Pattern for blockchain transactions:
+
+```typescript
+async function buyTokens(amount: number) {
+  // 1. Optimistic UI update (optional)
+  // 2. Execute transaction
+  const tx = await contract.buy({ value: parseEther(amount) });
+  // 3. Wait for confirmation
+  await tx.wait();
+  // 4. Invalidate queries to refresh from indexer
+  queryClient.invalidateQueries(['group', groupId]);
+}
+```
+
+## Security Rules
+
+### Never Trust Client Data
+- Validate all inputs server-side (Edge Functions)
+- Use Row Level Security in Supabase
+- Never expose service keys to client
+
+### Wallet Security
+- Never ask users to sign arbitrary messages
+- Always show clear transaction details before signing
+- Use Privy's embedded wallets for non-crypto users
+
+### Message Privacy
+- XMTP handles E2E encryption - don't try to decrypt or store messages
+- Don't log message metadata (who talks to whom)
+- File attachments go to IPFS, only CID is sent via XMTP
+
+## Error Handling
+
+### Transaction Errors
+```typescript
+try {
+  const tx = await contract.buy({ value });
+  await tx.wait();
+} catch (error) {
+  if (error.code === 'ACTION_REJECTED') {
+    // User rejected in wallet
+  } else if (error.code === 'INSUFFICIENT_FUNDS') {
+    // Not enough ETH
+  } else {
+    // Unknown error - log to Sentry
+    Sentry.captureException(error);
+  }
+}
+```
+
+### Supabase Errors
+```typescript
+const { data, error } = await supabase.from('groups').select();
+if (error) {
+  console.error('Supabase error:', error.message);
+  // Handle gracefully - show cached data or error state
+}
+```
+
+## Performance Guidelines
+
+### Queries
+- Use Supabase for reads, not blockchain (too slow)
+- Index frequently queried columns
+- Use `select()` to limit returned columns
+- Paginate large result sets
+
+### Caching
+- TanStack Query handles client caching
+- Set appropriate `staleTime` based on data type:
+  - Token prices: 30 seconds
+  - Group metadata: 5 minutes
+  - User profiles: 10 minutes
+
+### Images
+- Store on IPFS, cache URLs
+- Use Next.js Image component for optimization
+- Lazy load below-fold images
+
+## Environment Variables
+
+Required for development:
+```
+NEXT_PUBLIC_PRIVY_APP_ID=         # Privy app ID
+NEXT_PUBLIC_CHAIN_ID=80001        # Polygon Mumbai for dev
+NEXT_PUBLIC_XMTP_ENV=dev          # XMTP environment
+
+NEXT_PUBLIC_SUPABASE_URL=         # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY=    # Supabase anon key (safe for client)
+SUPABASE_SERVICE_KEY=             # Supabase service key (server only!)
+
+NEXT_PUBLIC_ALCHEMY_API_KEY=      # Alchemy RPC
+PINATA_JWT=                       # Pinata IPFS uploads
+```
+
+**RULE: Never prefix server-only secrets with `NEXT_PUBLIC_`**
+
+## Git Workflow
+
+- `main` - Production, auto-deploys to Vercel
+- `develop` - Integration branch
+- Feature branches: `feature/group-chat`, `fix/token-price`
+
+Commit messages:
+- `feat: add group chat with XMTP`
+- `fix: correct bonding curve calculation`
+- `chore: update dependencies`
+- `docs: update architecture doc`
+
+## Testing Priorities
+
+1. **Smart Contracts** - Foundry tests, 100% coverage on math
+2. **Critical Flows** - Group creation, token buy/sell
+3. **Edge Cases** - Empty states, error states, loading states
+
+## What NOT to Build
+
+Per the architecture doc, avoid over-engineering:
+
+- ❌ Rich text formatting (XMTP handles it)
+- ❌ Custom emoji packs (not our moat)
+- ❌ Voice/video chat (complex, not differentiated)
+- ❌ Bots/integrations (build later)
+- ❌ Custom auth (use Privy)
+
+## Key Differentiators to Emphasize
+
+When building features, prioritize what makes CommunityCoin unique:
+
+1. **Token price chart** - Show prominently, it's a real-time belief signal
+2. **Treasury balance** - Celebrate milestones, show growth
+3. **Mobilization board** - THE killer feature, not just chat
+4. **Execution flow** - Proposal → Vote → Fund → Ship
+
+## Quick Reference
+
+### Supabase Client Setup
+```typescript
+import { createClient } from '@supabase/supabase-js';
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+```
+
+### XMTP Client Setup
+```typescript
+import { Client } from '@xmtp/xmtp-js';
+
+const xmtp = await Client.create(signer, {
+  env: process.env.NEXT_PUBLIC_XMTP_ENV as 'dev' | 'production'
+});
+```
+
+### Contract Interaction
+```typescript
+import { ethers } from 'ethers';
+import { CommunityTokenABI } from '@/lib/contracts';
+
+const contract = new ethers.Contract(
+  tokenAddress,
+  CommunityTokenABI,
+  signer
+);
+```
+
+---
+
+Remember: CommunityCoin isn't a chat app—it's coordination infrastructure. Every feature should answer: "Does this help communities mobilize and ship?"

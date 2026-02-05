@@ -4,7 +4,12 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
 import { useStore } from "@/lib/store";
+import { useCreateGroup } from "@/lib/hooks/useCreateGroup";
+import { uploadCharterToIPFS } from "@/lib/ipfs";
+import { FundingModelSelector } from "@/components/funding/FundingModelSelector";
+import type { FundingModel, GroupCreationData } from "@/lib/types/funding";
 import { 
   Coins, 
   ArrowLeft, 
@@ -14,21 +19,34 @@ import {
   Users,
   FileText,
   Sparkles,
-  Check
+  Check,
+  Wallet,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 
 export default function CreateGroupPage() {
   const router = useRouter();
+  const { authenticated, login } = usePrivy();
   const { createGroup, buyTokens, joinGroup } = useStore();
+  const { 
+    createGroup: createOnChain, 
+    status: deployStatus, 
+    error: deployError,
+    isLoading: isDeploying 
+  } = useCreateGroup();
   
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [isLaunching, setIsLaunching] = useState(false);
+  const [formData, setFormData] = useState<GroupCreationData>({
     name: "",
     description: "",
     charter: "",
     isPublic: true,
-    tokenSymbol: "",
     channels: ["general", "announcements"],
+    fundingModel: {
+      type: "none",
+    },
   });
   const [initialBuyAmount, setInitialBuyAmount] = useState("");
 
@@ -41,36 +59,134 @@ export default function CreateGroupPage() {
   };
 
   const handleNameChange = (name: string) => {
+    setFormData(prev => {
+      const newData = { ...prev, name };
+      // Auto-generate token symbol if using token funding
+      if (prev.fundingModel.type === "token" && prev.fundingModel.tokenConfig) {
+        newData.fundingModel = {
+          ...prev.fundingModel,
+          tokenConfig: {
+            ...prev.fundingModel.tokenConfig,
+            symbol: prev.fundingModel.tokenConfig.symbol || generateSymbol(name),
+          },
+        };
+      }
+      return newData;
+    });
+  };
+
+  const handleFundingModelChange = (model: FundingModel) => {
     setFormData(prev => ({
       ...prev,
-      name,
-      tokenSymbol: prev.tokenSymbol || generateSymbol(name),
+      fundingModel: model,
     }));
   };
 
-  const launch = (opts: { buy: boolean }) => {
-    const newGroup = createGroup({
-      name: formData.name,
-      description: formData.description,
-      charter: formData.charter,
-      isPublic: formData.isPublic,
-      tokenSymbol: formData.tokenSymbol,
-      tokenPrice: 0.01,
-      tokenSupply: 100000,
-      treasuryBalance: 0,
-      memberCount: 0,
-      channels: formData.channels,
-    });
-
-    const buyAmount = parseFloat(initialBuyAmount);
-    if (opts.buy && !isNaN(buyAmount) && buyAmount > 0) {
-      buyTokens(newGroup.id, buyAmount);
-    }
-
-    // After launch, take creator directly into the member experience (chat)
-    joinGroup(newGroup.id);
+  const launch = async (opts: { buy: boolean }) => {
+    setIsLaunching(true);
     
-    router.push(`/group/${newGroup.id}`);
+    try {
+      // Determine token symbol based on funding model
+      const tokenSymbol = formData.fundingModel.type === "token"
+        ? formData.fundingModel.tokenConfig?.symbol || generateSymbol(formData.name)
+        : generateSymbol(formData.name);
+
+      // For token-funded groups, deploy on-chain
+      if (formData.fundingModel.type === "token") {
+        // Check if wallet is connected
+        if (!authenticated) {
+          login();
+          setIsLaunching(false);
+          return;
+        }
+
+        // Upload charter to IPFS
+        const charterCid = await uploadCharterToIPFS({
+          name: formData.name,
+          description: formData.description,
+          charter: formData.charter,
+          createdAt: new Date().toISOString(),
+          version: "1.0.0",
+        });
+
+        // Deploy contracts on-chain
+        const result = await createOnChain({
+          name: formData.name,
+          symbol: tokenSymbol,
+          charterCid,
+          isPublic: formData.isPublic,
+        });
+
+        if (!result) {
+          // Error handled by hook
+          setIsLaunching(false);
+          return;
+        }
+
+        // Create local group entry (will be synced from blockchain via indexer)
+        const newGroup = createGroup({
+          name: formData.name,
+          description: formData.description,
+          charter: formData.charter,
+          isPublic: formData.isPublic,
+          tokenSymbol,
+          tokenPrice: formData.fundingModel.tokenConfig?.initialPrice || 0.01,
+          tokenSupply: 0, // Will be updated by indexer
+          treasuryBalance: 0,
+          memberCount: 0,
+          channels: formData.channels,
+          governanceRules: [],
+          updates: [],
+          tickets: [],
+          libraryCollections: [],
+          libraryAssets: [],
+        });
+
+        // Store the contract addresses (for future reference)
+        console.log('Group deployed:', {
+          tokenAddress: result.tokenAddress,
+          treasuryAddress: result.treasuryAddress,
+          txHash: result.transactionHash,
+        });
+
+        // Buy tokens if opted in
+        if (opts.buy) {
+          const buyAmount = parseFloat(initialBuyAmount);
+          if (!isNaN(buyAmount) && buyAmount > 0) {
+            buyTokens(newGroup.id, buyAmount);
+          }
+        }
+
+        joinGroup(newGroup.id);
+        router.push(`/group/${newGroup.id}`);
+      } else {
+        // Non-token groups: just create locally for now
+        const newGroup = createGroup({
+          name: formData.name,
+          description: formData.description,
+          charter: formData.charter,
+          isPublic: formData.isPublic,
+          tokenSymbol,
+          tokenPrice: 0,
+          tokenSupply: 0,
+          treasuryBalance: 0,
+          memberCount: 0,
+          channels: formData.channels,
+          governanceRules: [],
+          updates: [],
+          tickets: [],
+          libraryCollections: [],
+          libraryAssets: [],
+        });
+
+        joinGroup(newGroup.id);
+        router.push(`/group/${newGroup.id}`);
+      }
+    } catch (error) {
+      console.error('Launch error:', error);
+    } finally {
+      setIsLaunching(false);
+    }
   };
 
   const canProceed = () => {
@@ -78,7 +194,14 @@ export default function CreateGroupPage() {
       case 1:
         return formData.name.length >= 3 && formData.description.length >= 10;
       case 2:
-        return formData.tokenSymbol.length >= 2;
+        // Funding model validation
+        if (formData.fundingModel.type === "token") {
+          return (formData.fundingModel.tokenConfig?.symbol?.length || 0) >= 2;
+        }
+        if (formData.fundingModel.type === "subscription") {
+          return (formData.fundingModel.subscriptionConfig?.price || 0) > 0;
+        }
+        return true; // donation and none are always valid
       case 3:
         return formData.charter.length >= 50;
       default:
@@ -186,7 +309,7 @@ export default function CreateGroupPage() {
                   >
                     <Globe className={`w-6 h-6 mb-2 ${formData.isPublic ? "text-ember" : "text-smoke"}`} />
                     <div className="font-medium text-pearl">Public</div>
-                    <div className="text-smoke text-sm">Anyone can see and buy tokens</div>
+                    <div className="text-smoke text-sm">Anyone can see and join</div>
                   </button>
                   <button
                     type="button"
@@ -199,7 +322,7 @@ export default function CreateGroupPage() {
                   >
                     <Lock className={`w-6 h-6 mb-2 ${!formData.isPublic ? "text-ember" : "text-smoke"}`} />
                     <div className="font-medium text-pearl">Private</div>
-                    <div className="text-smoke text-sm">Invite-only, tokens don't grant votes</div>
+                    <div className="text-smoke text-sm">Invite-only membership</div>
                   </button>
                 </div>
               </div>
@@ -207,7 +330,7 @@ export default function CreateGroupPage() {
           </motion.div>
         )}
 
-        {/* Step 2: Token Setup */}
+        {/* Step 2: Funding Model */}
         {step === 2 && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
@@ -216,67 +339,17 @@ export default function CreateGroupPage() {
           >
             <div className="text-center mb-10">
               <div className="w-16 h-16 rounded-2xl bg-mint/10 flex items-center justify-center mx-auto mb-6">
-                <Coins className="w-8 h-8 text-mint" />
+                <Wallet className="w-8 h-8 text-mint" />
               </div>
-              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Configure Your Token</h1>
-              <p className="text-smoke">Your community token launches automatically</p>
+              <h1 className="font-display text-3xl font-bold mb-3 text-pearl">Choose Your Funding Model</h1>
+              <p className="text-smoke">How will your community raise and manage funds?</p>
             </div>
 
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-pearl">Token Symbol</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-smoke">$</span>
-                  <input
-                    type="text"
-                    value={formData.tokenSymbol}
-                    onChange={(e) => setFormData(prev => ({ ...prev, tokenSymbol: e.target.value.toUpperCase().slice(0, 5) }))}
-                    placeholder="SYMBOL"
-                    className="w-full pl-8 pr-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors text-lg font-mono uppercase text-pearl placeholder:text-smoke/50"
-                  />
-                </div>
-                <p className="text-smoke text-sm mt-2">2-5 characters, like a stock ticker</p>
-              </div>
-
-              <div className="glass rounded-xl p-6 space-y-4">
-                <h3 className="font-medium text-lg text-pearl">Token Economics</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="p-4 bg-slate rounded-lg">
-                    <div className="text-smoke mb-1">Starting Price</div>
-                    <div className="font-mono text-lg text-pearl">$0.01</div>
-                  </div>
-                  <div className="p-4 bg-slate rounded-lg">
-                    <div className="text-smoke mb-1">Initial Supply</div>
-                    <div className="font-mono text-lg text-pearl">100,000</div>
-                  </div>
-                  <div className="p-4 bg-slate rounded-lg">
-                    <div className="text-smoke mb-1">Curve Type</div>
-                    <div className="font-mono text-lg text-pearl">Bonding</div>
-                  </div>
-                  <div className="p-4 bg-slate rounded-lg">
-                    <div className="text-smoke mb-1">Treasury Fee</div>
-                    <div className="font-mono text-lg text-pearl">2%</div>
-                  </div>
-                </div>
-                <p className="text-smoke text-sm">
-                  Price increases as more people buy. 2% of each trade goes to the community treasury.
-                </p>
-              </div>
-
-              {formData.tokenSymbol && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center p-6 glass rounded-xl"
-                >
-                  <div className="text-smoke mb-2">Your token preview</div>
-                  <div className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-mint/20 to-mint/10 rounded-full">
-                    <Sparkles className="w-5 h-5 text-mint" />
-                    <span className="font-mono text-xl text-mint">${formData.tokenSymbol}</span>
-                  </div>
-                </motion.div>
-              )}
-            </div>
+            <FundingModelSelector
+              value={formData.fundingModel}
+              onChange={handleFundingModelChange}
+              groupName={formData.name}
+            />
           </motion.div>
         )}
 
@@ -360,9 +433,11 @@ export default function CreateGroupPage() {
                     <h2 className="font-display text-2xl font-semibold text-pearl">{formData.name}</h2>
                     <p className="text-smoke">{formData.description}</p>
                   </div>
-                  <div className="px-3 py-1 rounded-full bg-mint/10 text-mint text-sm font-mono">
-                    ${formData.tokenSymbol}
-                  </div>
+                  {formData.fundingModel.type === "token" && (
+                    <div className="px-3 py-1 rounded-full bg-mint/10 text-mint text-sm font-mono">
+                      ${formData.fundingModel.tokenConfig?.symbol || generateSymbol(formData.name)}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-4 mb-4">
@@ -375,6 +450,13 @@ export default function CreateGroupPage() {
                       <Lock className="w-4 h-4" /> Private
                     </span>
                   )}
+                  <span className="flex items-center gap-1 text-sm text-smoke">
+                    <Wallet className="w-4 h-4" /> 
+                    {formData.fundingModel.type === "token" && "Token Launch"}
+                    {formData.fundingModel.type === "donation" && "Donations"}
+                    {formData.fundingModel.type === "subscription" && "Subscription"}
+                    {formData.fundingModel.type === "none" && "Free Community"}
+                  </span>
                 </div>
 
                 <div className="border-t border-graphite pt-4">
@@ -383,89 +465,185 @@ export default function CreateGroupPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="glass rounded-xl p-4 text-center">
-                  <div className="text-smoke text-sm mb-1">Token Price</div>
-                  <div className="font-mono text-lg text-mint">$0.01</div>
+              {/* Funding Model Summary */}
+              {formData.fundingModel.type === "token" && (
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="glass rounded-xl p-4 text-center">
+                    <div className="text-smoke text-sm mb-1">Token Price</div>
+                    <div className="font-mono text-lg text-mint">
+                      ${formData.fundingModel.tokenConfig?.initialPrice?.toFixed(2) || "0.01"}
+                    </div>
+                  </div>
+                  <div className="glass rounded-xl p-4 text-center">
+                    <div className="text-smoke text-sm mb-1">Supply</div>
+                    <div className="font-mono text-lg text-pearl">100K</div>
+                  </div>
+                  <div className="glass rounded-xl p-4 text-center">
+                    <div className="text-smoke text-sm mb-1">Treasury Fee</div>
+                    <div className="font-mono text-lg text-gold">2%</div>
+                  </div>
                 </div>
-                <div className="glass rounded-xl p-4 text-center">
-                  <div className="text-smoke text-sm mb-1">Supply</div>
-                  <div className="font-mono text-lg text-pearl">100K</div>
-                </div>
-                <div className="glass rounded-xl p-4 text-center">
-                  <div className="text-smoke text-sm mb-1">Treasury Fee</div>
-                  <div className="font-mono text-lg text-gold">2%</div>
-                </div>
-              </div>
+              )}
 
-              {/* Optional: Buy tokens at launch (without joining) */}
-              <div className="glass rounded-xl p-6">
-                <h3 className="font-medium text-pearl mb-2">Buy at launch (optional)</h3>
-                <p className="text-smoke text-sm mb-4">
-                  Buy some ${formData.tokenSymbol || "tokens"} right as you launch.
-                </p>
-
-                <div className="space-y-3">
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={initialBuyAmount}
-                      onChange={(e) => setInitialBuyAmount(e.target.value)}
-                      placeholder="0"
-                      className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors font-mono text-lg text-pearl placeholder:text-smoke/50"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-smoke font-mono">
-                      ${formData.tokenSymbol || "TOKEN"}
+              {formData.fundingModel.type === "subscription" && (
+                <div className="glass rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-pearl">Membership Price</span>
+                    <span className="font-mono text-lg text-mint">
+                      ${formData.fundingModel.subscriptionConfig?.price || 10}/
+                      {formData.fundingModel.subscriptionConfig?.period === "yearly" ? "yr" : "mo"}
                     </span>
                   </div>
-
-                  {initialBuyAmount && !isNaN(parseFloat(initialBuyAmount)) && parseFloat(initialBuyAmount) > 0 && (
-                    <div className="p-4 bg-slate rounded-xl space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-smoke">Price per token</span>
-                        <span className="font-mono text-pearl">$0.01</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-smoke">Total cost</span>
-                        <span className="font-mono text-pearl">
-                          ${(parseFloat(initialBuyAmount) * 0.01).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-smoke">Treasury fee (2%)</span>
-                        <span className="font-mono text-gold">
-                          ${(parseFloat(initialBuyAmount) * 0.01 * 0.02).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <motion.button
-                  onClick={() => launch({ buy: true })}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={isNaN(parseFloat(initialBuyAmount)) || parseFloat(initialBuyAmount) <= 0}
-                  className="w-full py-4 bg-mint rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white disabled:opacity-30"
-                >
-                  Buy
-                </motion.button>
+              {formData.fundingModel.type === "donation" && (
+                <div className="glass rounded-xl p-4">
+                  <div className="text-sm text-smoke">
+                    Accepting donations with suggested amounts: 
+                    {(formData.fundingModel.donationConfig?.suggestedAmounts || [10, 50, 100, 500])
+                      .map(a => ` $${a}`)
+                      .join(",")}
+                  </div>
+                </div>
+              )}
+
+              {/* Optional: Buy tokens at launch (only for token model) */}
+              {formData.fundingModel.type === "token" && (
+                <div className="glass rounded-xl p-6">
+                  <h3 className="font-medium text-pearl mb-2">Buy at launch (optional)</h3>
+                  <p className="text-smoke text-sm mb-4">
+                    Buy some ${formData.fundingModel.tokenConfig?.symbol || generateSymbol(formData.name)} right as you launch.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={initialBuyAmount}
+                        onChange={(e) => setInitialBuyAmount(e.target.value)}
+                        placeholder="0"
+                        className="w-full px-4 py-4 bg-white border border-graphite rounded-xl focus:outline-none focus:border-mint transition-colors font-mono text-lg text-pearl placeholder:text-smoke/50"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-smoke font-mono">
+                        ${formData.fundingModel.tokenConfig?.symbol || "TOKEN"}
+                      </span>
+                    </div>
+
+                    {initialBuyAmount && !isNaN(parseFloat(initialBuyAmount)) && parseFloat(initialBuyAmount) > 0 && (
+                      <div className="p-4 bg-slate rounded-xl space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-smoke">Price per token</span>
+                          <span className="font-mono text-pearl">
+                            ${formData.fundingModel.tokenConfig?.initialPrice?.toFixed(2) || "0.01"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-smoke">Total cost</span>
+                          <span className="font-mono text-pearl">
+                            ${(parseFloat(initialBuyAmount) * (formData.fundingModel.tokenConfig?.initialPrice || 0.01)).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-smoke">Treasury fee (2%)</span>
+                          <span className="font-mono text-gold">
+                            ${(parseFloat(initialBuyAmount) * (formData.fundingModel.tokenConfig?.initialPrice || 0.01) * 0.02).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Deploy Status Messages */}
+              {deployError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                  <div className="text-red-700 text-sm">{deployError}</div>
+                </div>
+              )}
+
+              {isDeploying && (
+                <div className="p-4 bg-mint/10 border border-mint/20 rounded-xl">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Loader2 className="w-5 h-5 text-mint animate-spin" />
+                    <span className="font-medium text-pearl">
+                      {deployStatus === 'awaiting_signature' && 'Waiting for wallet signature...'}
+                      {deployStatus === 'pending' && 'Deploying contracts...'}
+                      {deployStatus === 'uploading_charter' && 'Uploading charter to IPFS...'}
+                    </span>
+                  </div>
+                  <p className="text-smoke text-sm">
+                    This may take a minute. Please don&apos;t close this page.
+                  </p>
+                </div>
+              )}
+
+              {/* Launch Buttons */}
+              {formData.fundingModel.type === "token" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <motion.button
+                    onClick={() => launch({ buy: true })}
+                    whileHover={{ scale: isLaunching ? 1 : 1.02 }}
+                    whileTap={{ scale: isLaunching ? 1 : 0.98 }}
+                    disabled={isLaunching || isNaN(parseFloat(initialBuyAmount)) || parseFloat(initialBuyAmount) <= 0}
+                    className="w-full py-4 bg-mint rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white disabled:opacity-30"
+                  >
+                    {isLaunching ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Deploying...
+                      </>
+                    ) : (
+                      'Buy & Launch'
+                    )}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => launch({ buy: false })}
+                    whileHover={{ scale: isLaunching ? 1 : 1.02 }}
+                    whileTap={{ scale: isLaunching ? 1 : 0.98 }}
+                    disabled={isLaunching}
+                    className="w-full py-4 glass rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-pearl hover:bg-graphite transition-colors disabled:opacity-30"
+                  >
+                    {isLaunching ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Deploying...
+                      </>
+                    ) : (
+                      'Launch Without Buying'
+                    )}
+                  </motion.button>
+                </div>
+              ) : (
                 <motion.button
                   onClick={() => launch({ buy: false })}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 glass rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-pearl hover:bg-graphite transition-colors"
+                  whileHover={{ scale: isLaunching ? 1 : 1.02 }}
+                  whileTap={{ scale: isLaunching ? 1 : 0.98 }}
+                  disabled={isLaunching}
+                  className="w-full py-4 bg-ember rounded-xl font-semibold text-lg flex items-center justify-center gap-3 text-white disabled:opacity-30"
                 >
-                  Skip
+                  {isLaunching ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Launch Community
+                    </>
+                  )}
                 </motion.button>
-              </div>
+              )}
 
               <p className="text-center text-smoke text-sm">
-                Your token will deploy instantly and your group chat will be ready
+                {formData.fundingModel.type === "token" 
+                  ? "Your token will deploy instantly and your group chat will be ready"
+                  : "Your community will be created and your group chat will be ready"}
               </p>
             </div>
           </motion.div>

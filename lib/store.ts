@@ -391,13 +391,27 @@ export const useStore = create<AppState>((set, get) => ({
   setCurrentUser: (user) => set({ currentUser: user }),
 
   createGroup: (groupData) => {
+    const user = get().currentUser!;
+    const groupId = Math.random().toString(36).substr(2, 9);
+    
+    // Creator is automatically a founder member
+    const creatorMember: Member = {
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      reputation: user.reputation,
+      role: "founder",
+      joinedAt: new Date(),
+      tokensHeld: 0,
+    };
+    
     const newGroup: Group = {
       ...groupData,
-      id: Math.random().toString(36).substr(2, 9),
+      id: groupId,
       createdAt: new Date(),
-      creatorId: get().currentUser!.id,
+      creatorId: user.id,
       priceHistory: generatePriceHistory(0.01),
-      members: [],
+      members: [creatorMember], // Creator starts as a member
       messages: [],
       proposals: [],
       governanceRules: [],
@@ -405,9 +419,15 @@ export const useStore = create<AppState>((set, get) => ({
       tickets: [],
       libraryCollections: [],
       libraryAssets: [],
-      memberCount: 0,
+      memberCount: 1, // Start with 1 member (creator)
     };
-    set((state) => ({ groups: [...state.groups, newGroup] }));
+    
+    // Add group to state AND mark creator as joined
+    set((state) => ({ 
+      groups: [...state.groups, newGroup],
+      joinedGroupIds: [...state.joinedGroupIds, groupId], // Auto-join creator
+    }));
+    
     return newGroup;
   },
 

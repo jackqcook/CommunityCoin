@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useStore } from "@/lib/store";
+import { usePrivy } from "@privy-io/react-auth";
 import {
   Coins,
   Search,
@@ -11,16 +12,20 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
-  HelpCircle
+  HelpCircle,
+  LogOut,
+  User
 } from "lucide-react";
 
 export default function LandingPage() {
   const { groups } = useStore();
+  const { login, logout, authenticated, user } = usePrivy();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [howItWorksSlide, setHowItWorksSlide] = useState(0);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const filteredGroups = groups.filter((group) =>
     group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -187,21 +192,60 @@ export default function LandingPage() {
                 >
                   Create Community
                 </Link>
-                <button className="px-4 py-2 text-pearl hover:bg-slate rounded-lg transition-colors text-sm font-medium">
-                  Log In
-                </button>
+                {authenticated ? (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="flex items-center gap-2 px-3 py-2 bg-slate rounded-lg hover:bg-graphite transition-colors text-sm font-medium text-pearl"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-ember to-flame flex items-center justify-center">
+                        <User className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="max-w-24 truncate">
+                        {user?.email?.address || user?.wallet?.address?.slice(0, 6) + "..." || "User"}
+                      </span>
+                    </button>
+                    {showUserMenu && (
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg border border-graphite shadow-lg py-1 z-50">
+                        <div className="px-4 py-2 border-b border-graphite">
+                          <p className="text-xs text-smoke">Signed in as</p>
+                          <p className="text-sm text-pearl truncate font-medium">
+                            {user?.email?.address || user?.wallet?.address?.slice(0, 10) + "..."}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            logout();
+                            setShowUserMenu(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-pearl hover:bg-slate transition-colors"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    onClick={login}
+                    className="px-4 py-2 bg-ember text-white rounded-lg hover:bg-ember/90 transition-colors text-sm font-medium"
+                  >
+                    Log In
+                  </button>
+                )}
               </div>
             </div>
           </header>
 
           {/* Content Area */}
           <div className="flex-1 overflow-y-auto">
-            <div className="max-w-5xl mx-auto px-6 py-8">
+            <div className="px-6 py-6">
           {/* Page Title */}
-          <h1 className="text-2xl font-bold text-pearl mb-6">Explore Communities</h1>
+          <h1 className="text-xl font-bold text-pearl mb-4">Explore Communities</h1>
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
+          <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-2">
             {filterTabs.map((filter) => (
               <button
                 key={filter}
@@ -227,29 +271,45 @@ export default function LandingPage() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="glass rounded-lg border border-graphite p-4 hover:border-ember transition-colors"
                 >
-                  <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ember to-flame flex items-center justify-center flex-shrink-0">
-                      <Coins className="w-5 h-5 text-white" />
+                  <Link
+                    href={`/group/${group.id}`}
+                    className="block bg-white rounded-xl border border-graphite p-5 hover:border-ember hover:shadow-lg transition-all h-full"
+                  >
+                    {/* Header */}
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center flex-shrink-0">
+                        <Coins className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-pearl text-lg">{group.name}</h3>
+                        <p className="text-xs text-smoke">
+                          {group.memberCount.toLocaleString()} members · ${group.tokenSymbol}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <Link href={`/group/${group.id}`}>
-                        <h3 className="font-semibold text-pearl mb-1 hover:underline">{group.name}</h3>
-                      </Link>
-                      <p className="text-xs text-smoke">
-                        {group.memberCount.toLocaleString()} members
-                      </p>
-                    </div>
-                    <Link
-                      href={`/group/${group.id}`}
-                      className="px-4 py-1.5 bg-ember rounded-full text-white text-sm font-medium hover:bg-ember/90 transition-colors whitespace-nowrap"
-                    >
-                      Join
+
+                    {/* Mission Statement */}
+                    <p className="text-sm text-smoke leading-relaxed mb-4 line-clamp-2">
+                      {group.description}
+                    </p>
+
+                      {/* Stats Row */}
+                      <div className="flex items-center justify-between pt-3 border-t border-graphite">
+                        <div>
+                          <p className="text-xs text-smoke">Market Cap</p>
+                          <p className="text-sm font-semibold text-pearl">${(group.tokenPrice * group.tokenSupply).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-smoke">Treasure</p>
+                          <p className="text-sm font-semibold text-emerald-600">${group.treasuryBalance.toLocaleString()}</p>
+                        </div>
+                        <span className="px-3 py-1.5 bg-ember rounded-full text-white text-xs font-medium">
+                          Join
+                        </span>
+                      </div>
                     </Link>
-                  </div>
-                  <p className="text-sm text-smoke line-clamp-2">{group.description}</p>
-                </motion.div>
+                  </motion.div>
               ))}
             </div>
             {filteredGroups.length > 6 && (
@@ -272,28 +332,44 @@ export default function LandingPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="glass rounded-lg border border-graphite p-4 hover:border-ember transition-colors"
                   >
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-ember to-flame flex items-center justify-center flex-shrink-0">
-                        <Coins className="w-5 h-5 text-white" />
+                    <Link
+                      href={`/group/${group.id}`}
+                      className="block bg-white rounded-xl border border-graphite p-5 hover:border-ember hover:shadow-lg transition-all h-full"
+                    >
+                      {/* Header */}
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-ember to-flame flex items-center justify-center flex-shrink-0">
+                          <Coins className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-pearl text-lg">{group.name}</h3>
+                          <p className="text-xs text-smoke">
+                            {group.memberCount.toLocaleString()} members · ${group.tokenSymbol}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <Link href={`/group/${group.id}`}>
-                          <h3 className="font-semibold text-pearl mb-1 hover:underline">{group.name}</h3>
-                        </Link>
-                        <p className="text-xs text-smoke">
-                          {group.memberCount.toLocaleString()} members
-                        </p>
+
+                      {/* Mission Statement */}
+                      <p className="text-sm text-smoke leading-relaxed mb-4 line-clamp-2">
+                        {group.description}
+                      </p>
+
+                      {/* Stats Row */}
+                      <div className="flex items-center justify-between pt-3 border-t border-graphite">
+                        <div>
+                          <p className="text-xs text-smoke">Market Cap</p>
+                          <p className="text-sm font-semibold text-pearl">${(group.tokenPrice * group.tokenSupply).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-smoke">Treasure</p>
+                          <p className="text-sm font-semibold text-emerald-600">${group.treasuryBalance.toLocaleString()}</p>
+                        </div>
+                        <span className="px-3 py-1.5 bg-ember rounded-full text-white text-xs font-medium">
+                          Join
+                        </span>
                       </div>
-                      <Link
-                        href={`/group/${group.id}`}
-                        className="px-4 py-1.5 bg-ember rounded-full text-white text-sm font-medium hover:bg-ember/90 transition-colors whitespace-nowrap"
-                      >
-                        Join
-                      </Link>
-                    </div>
-                    <p className="text-sm text-smoke line-clamp-2">{group.description}</p>
+                    </Link>
                   </motion.div>
                 ))}
               </div>

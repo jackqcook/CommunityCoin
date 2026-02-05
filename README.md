@@ -83,7 +83,7 @@ This is a functional prototype demonstrating the core user flow:
 ### What's Next
 
 - Real wallet authentication (Privy/Dynamic)
-- Smart contract deployment (Base/Solana)
+- Smart contract deployment (Polygon)
 - E2E encryption (Signal Protocol/MLS)
 - Persistent database (PostgreSQL)
 - Real-time sync (WebSockets)
